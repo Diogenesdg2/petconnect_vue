@@ -1,11 +1,12 @@
 <template>
     <div v-if="pet">
-      <h1 class="nomepet">{{ pet.nome }}</h1>
-      <p class="dadospet">Cor: {{ pet.cor }}</p>
-      <p class="dadospet">Porte: {{ pet.porte }}</p>
-      <p class="dadospet">Gênero: {{ pet.genero }}</p>
-      <h2 class="nomepet" v-if="dono">Dono: {{ dono.nome }}</h2>
-      <p class="dadospet" v-if="dono">Telefone: {{ dono.telefone }}</p>
+        <img v-if="pet.imagemUrl" :src="pet.imagemUrl" alt="Foto do Pet" class="pet-image">
+        <h1 class="nomepet">{{ pet.nome }}</h1>
+        <p class="dadospet">Cor: {{ pet.cor }}</p>
+        <p class="dadospet">Porte: {{ pet.porte }}</p>
+        <p class="dadospet">Gênero: {{ pet.genero }}</p>
+        <h2 class="nomepet" v-if="dono">Dono: {{ dono.nome }}</h2>
+        <p class="dadospet" v-if="dono">Telefone: {{ dono.telefone }}</p>
     </div>
   </template>
   
@@ -32,7 +33,8 @@
             const petDocSnap = await getDoc(petDocRef);  
 
             if (petDocSnap.exists()) {  
-                this.pet = petDocSnap.data();  
+                this.pet = petDocSnap.data();
+                this.pet.imagemUrl = petDocSnap.data().imagemUrl;  
                 const userId = this.pet.userId;  
 
                 // Busca os dados do dono  
@@ -64,6 +66,13 @@
     font-size: 25px;
     text-align: center
 
+}
+.pet-image {  
+  display: block;  
+  margin: 20px auto;  
+  max-width: 300px;  
+  border-radius: 10px;  
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);  
 }
 
 </style>
