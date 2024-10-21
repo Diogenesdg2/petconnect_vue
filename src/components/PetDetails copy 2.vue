@@ -1,5 +1,5 @@
 <template>
-    <div v-if="pet">
+    <div v-if="pets">
       <h1>{{ Pets.nome }}</h1>
       <p>Cor: {{ Pets.cor }}</p>
       <p>Porte: {{ Pets.porte }}</p>
@@ -20,10 +20,10 @@
       };
     },
     created() {
-      const PetsId = this.$route.params.petsId;
+      const PetsId = this.$route.params.PetsId;
   
-      // Busca o pet no Firebase Firestore
-      db.collection('Pets').doc(PetsId).get().then(doc => {
+      // Busca o Pets no Firebase Firestore
+      db.collection('Pets').doc(PetsId).get().then(doc => {  
         if (doc.exists) {
           this.Pets = doc.data();
           const userId = this.Pets.userId;
@@ -32,6 +32,8 @@
           db.collection('Usuarios').doc(userId).get().then(docDono => {
             if (docDono.exists) {
               this.dono = docDono.data();
+            } else{
+                console.log("DOCUMENTO NÃO ENCONTRADO")
             }
           });
         }
