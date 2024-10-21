@@ -1,5 +1,4 @@
-import firebase from "/node_modules/.vite/deps/firebase_app.js?v=40a958a8"
-
+import firebase from 'firebase/app';
 import 'firebase/firestore';
 
 const firebaseConfig = {

@@ -6,7 +6,7 @@ Vue.use(VueRouter);
 
 const routes = [
   {
-    path: '/pet/:petId',
+    path: '/pet/:PetsId',
     name: 'PetDetails',
     component: PetDetails
   }
