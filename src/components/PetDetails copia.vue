@@ -1,13 +1,11 @@
 <template>
     <div v-if="pet">
-        <h1 class="nomepet">Nome: {{ pet.nome }}</h1>
+        <h1 class="nomepet">{{ pet.nome }}</h1>
         <img v-if="pet.imagemUrl" :src="pet.imagemUrl" alt="Foto do Pet" class="imagem">
         <p class="dadospet">Cor: {{ pet.cor }}</p>
         <p class="dadospet">Porte: {{ pet.porte }}</p>
         <p class="dadospet">Gênero: {{ pet.genero }}</p>
-    </div>
-    <div>    
-        <h2 class="nomepet" v-if="dono">Tutor: {{ dono.nome }}</h2>
+        <h2 class="nomepet" v-if="dono">Dono: {{ dono.nome }}</h2>
         <img v-if="dono?.foto" :src="dono.foto" alt="Foto do Tutor" class="imagem"> 
         <p class="dadospet" v-if="dono">Telefone: {{ dono.telefone }}</p>
     </div>
@@ -66,7 +64,7 @@
     text-align: center;
 }
 .dadospet{
-    color: black;
+    color: brown;
     font-size: 25px;
     text-align: center
 
