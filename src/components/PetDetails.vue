@@ -61,12 +61,12 @@
   </script>
 <style scoped>
 .nomepet{
-    color: white;
+    color: black;
     font-size: 50px;
     text-align: center;
 }
 .dadospet{
-    color: black;
+    color: rgb(71, 71, 71);
     font-size: 25px;
     text-align: center
 
