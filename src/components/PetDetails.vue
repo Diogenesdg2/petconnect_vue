@@ -1,11 +1,12 @@
 <template>
     <div v-if="pet">
-        <img v-if="pet.imagemUrl" :src="pet.imagemUrl" alt="Foto do Pet" class="pet-image">
+        <img v-if="pet.imagemUrl" :src="pet.imagemUrl" alt="Foto do Pet" class="imagem">
         <h1 class="nomepet">{{ pet.nome }}</h1>
         <p class="dadospet">Cor: {{ pet.cor }}</p>
         <p class="dadospet">Porte: {{ pet.porte }}</p>
         <p class="dadospet">Gênero: {{ pet.genero }}</p>
         <h2 class="nomepet" v-if="dono">Dono: {{ dono.nome }}</h2>
+        <img v-if="dono?.foto" :src="dono.foto" alt="Foto do Tutor" class="imagem"> 
         <p class="dadospet" v-if="dono">Telefone: {{ dono.telefone }}</p>
     </div>
   </template>
@@ -42,7 +43,8 @@
                 const userDocSnap = await getDoc(userDocRef);  
 
                 if (userDocSnap.exists()) {  
-                this.dono = userDocSnap.data();  
+                this.dono = userDocSnap.data(); 
+                this.dono.foto = userDocSnap.data().foto; 
                 } else {  
                 console.log("DOCUMENTO DO USUÁRIO NÃO ENCONTRADO");  
                 }  
@@ -67,7 +69,7 @@
     text-align: center
 
 }
-.pet-image {  
+.imagem {  
   display: block;  
   margin: 20px auto;  
   max-width: 300px;  
