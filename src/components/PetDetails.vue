@@ -9,7 +9,7 @@
     <div>    
         <h2 class="nomepet" v-if="dono">Tutor: {{ dono.nome }}</h2>
         <img v-if="dono?.foto" :src="dono.foto" alt="Foto do Tutor" class="imagem"> 
-        <p class="dadospet" v-if="dono">Telefone: {{ dono.telefone }}</p>
+        <p class="dadospet" v-if="dono">Contato: {{ dono.telefone }}</p>
     </div>
   </template>
   
