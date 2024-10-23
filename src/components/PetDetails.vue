@@ -66,16 +66,17 @@
     text-align: center;
 }
 .dadospet{
-    color: rgb(71, 71, 71);
-    font-size: 25px;
-    text-align: center
+    color: rgb(49, 49, 49);
+    font-size: 28px;
+    text-align: center;
+    
 
 }
 .imagem {  
   display: block;  
   margin: 20px auto;  
   max-width: 300px;  
-  border-radius: 10px;  
+  border-radius: 100%;  
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);  
 }
 
