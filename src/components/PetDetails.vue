@@ -2,6 +2,7 @@
     <div v-if="pet">
         <h1 class="nomepet">Nome: {{ pet.nome }}</h1>
         <img v-if="pet.imagemUrl" :src="pet.imagemUrl" alt="Foto do Pet" class="imagem">
+        <p class="dadospet">Raça: {{ pet.raca }}</p>
         <p class="dadospet">Cor: {{ pet.cor }}</p>
         <p class="dadospet">Porte: {{ pet.porte }}</p>
         <p class="dadospet">Gênero: {{ pet.genero }}</p>
