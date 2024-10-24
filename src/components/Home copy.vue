@@ -5,10 +5,7 @@ export default {
 <template>  
  <div class="container"> 
     <h1 class="desch1">Pet Connect</h1> 
- 
-  <b-img src="https://firebasestorage.googleapis.com/v0/b/pet-connect-c53f1.appspot.com/o/imagens%2Flogopetconnect.png?alt=media&token=234db5bb-947f-4b4d-ad4c-8fa656b33ec7"" fluid alt="Responsive image"></b-img>
-
- 
+ <img class="img" src="https://firebasestorage.googleapis.com/v0/b/pet-connect-c53f1.appspot.com/o/imagens%2FlogoPet.jpeg?alt=media&token=f4ab3865-7d8f-4293-bfcf-97ceaf42fb94" alt="Logo Pet">  
  <p class="description">  
  Esta página faz parte de um aplicativo (projeto) de TCC e visa ajudar tutores que tiveram seus animais perdidos a encontrá-los. Através de uma interface intuitiva, facilitamos a comunicação e o compartilhamento de informações sobre pets desaparecidos, criando uma rede de apoio entre os tutores e a comunidade.  
  </p>  
