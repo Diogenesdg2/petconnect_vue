@@ -62,7 +62,7 @@
   </template>  
   
   <script>  
-  // Seu código JavaScript permanece o mesmo  
+  
   import { db } from '../firebaseDB';  
   import { getFirestore, doc, getDoc } from 'firebase/firestore';  
   
