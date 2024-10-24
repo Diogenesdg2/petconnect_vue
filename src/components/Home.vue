@@ -20,7 +20,7 @@
         <p class="about-text">  
           Esta página faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.  
           Através de uma interface intuitiva, facilitamos a comunicação e o compartilhamento de informações  
-          sobre pets desaparecidos, criando uma rede de apoio entre os tutores e a comunidade.  
+          sobre pets desaparecidos, criando assim uma rede de apoio entre os tutores e a comunidade.  
         </p>  
       </div>  
     </section>  
