@@ -18,7 +18,7 @@
       <div class="about-content">  
         <h2 class="section-title">Sobre o Projeto</h2>  
         <p class="about-text">  
-          Esta página faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.  
+          Esta plataforma faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.  
           Através de uma interface intuitiva, facilitamos a comunicação e o compartilhamento de informações  
           sobre pets desaparecidos, criando assim uma rede de apoio entre os tutores e a comunidade.  
         </p>  
@@ -59,14 +59,33 @@ export default {
 /* Hero Section */  
 .hero-section {  
   padding: 4rem 2rem;  
-  background: linear-gradient(135deg, #90c0c0, hsl(170, 80%, 31%) 100%);  
+  background: linear-gradient(135deg,   
+    #004d40 0%,  
+    #00695c 50%,  
+    #004d40 100%  
+  );  
   color: white;  
   text-align: center;  
+  position: relative;  
+  overflow: hidden;  
+}  
+
+.hero-section::before {  
+  content: '';  
+  position: absolute;  
+  top: 0;  
+  left: 0;  
+  right: 0;  
+  bottom: 0;  
+  background: linear-gradient(#90c0c0, rgba(0,0,0,0.2));  
+  z-index: 1;  
 }  
 
 .hero-content {  
   max-width: 800px;  
   margin: 0 auto;  
+  position: relative;  
+  z-index: 2;  
 }  
 
 .logo-image {  
@@ -90,7 +109,7 @@ export default {
   
   50% {  
     transform: scale(1.1);  
-    color: #ffe6e6;  
+    color: #e6ffe6;  
   }  
   
   100% {  
@@ -157,7 +176,7 @@ export default {
   transform: translateX(-50%);  
   width: 50px;  
   height: 3px;  
-  background: linear-gradient(to right, #90c0c0, hsl(170, 80%, 31%));  
+  background: linear-gradient(to right, #004d40, #00695c);  
   border-radius: 2px;  
 }  
 
@@ -212,7 +231,7 @@ export default {
   left: 0;  
   right: 0;  
   height: 4px;  
-  background: linear-gradient(to right, #90c0c0, hsl(170, 80%, 31%));  
+  background: linear-gradient(to right, #004d40, #00695c);  
   transform: scaleX(0);  
   transition: transform 0.3s ease;  
 }  

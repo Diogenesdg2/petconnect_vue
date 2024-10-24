@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PetDetails from '../components/PetDetails.vue'
-import Homepage from '../Backup/Home com hover versão 1.vue'
+import Homepage from '../components/Home.vue'
 
 const routes = [
   {
