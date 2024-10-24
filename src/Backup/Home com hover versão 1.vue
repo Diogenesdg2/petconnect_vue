@@ -18,7 +18,7 @@
       <div class="about-content">  
         <h2 class="section-title">Sobre o Projeto</h2>  
         <p class="about-text">  
-          Esta página faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.  
+          Esta plataforma faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.  
           Através de uma interface intuitiva, facilitamos a comunicação e o compartilhamento de informações  
           sobre pets desaparecidos, criando uma rede de apoio entre os tutores e a comunidade.  
         </p>  
@@ -53,13 +53,12 @@ export default {
 .home-container {  
   min-height: 100vh;  
   background: linear-gradient(to bottom, #ffffff, #f8f9fa);  
-  animation: pageLoad 0.5s ease-out;  
 }  
 
 /* Hero Section */  
 .hero-section {  
   padding: 4rem 2rem;  
-  background: linear-gradient(135deg, #90c0c0, hsl(170, 80%, 31%) 100%);  
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);  
   color: white;  
   text-align: center;  
 }  
@@ -72,61 +71,29 @@ export default {
 .logo-image {  
   width: 180px;  
   height: 180px;  
-  border-radius: 50%;  
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  
   margin-bottom: 1.5rem;  
-  transition: transform 0.3s ease;  
-}  
-
-.logo-image:hover {  
-  transform: scale(1.05);  
-}  
-
-@keyframes titlePulse {  
-  0% {  
-    transform: scale(1);  
-    color: white;  
-  }  
-  
-  50% {  
-    transform: scale(1.1);  
-    color: #ffe6e6;  
-  }  
-  
-  100% {  
-    transform: scale(1);  
-    color: white;  
-  }  
 }  
 
 .main-title {  
   font-size: 3.5rem;  
   font-weight: bold;  
   margin-bottom: 1rem;  
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);  
+  transition: all 0.4s ease;  
   display: inline-block;  
   padding: 0.5rem 1rem;  
-  cursor: pointer;  
-  animation: titlePulse 2s ease-in-out infinite;  
-  position: relative;  
+}  
+
+.main-title:hover {  
+  transform: scale(1.15);  
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);  
   letter-spacing: 2px;  
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);  
 }  
 
 .tagline {  
   font-size: 1.5rem;  
   opacity: 0.9;  
-  animation: fadeIn 1s ease-out;  
-}  
-
-@keyframes fadeIn {  
-  from {  
-    opacity: 0;  
-    transform: translateY(20px);  
-  }  
-  to {  
-    opacity: 0.9;  
-    transform: translateY(0);  
-  }  
 }  
 
 /* About Section */  
@@ -145,38 +112,12 @@ export default {
   color: #2c3e50;  
   font-size: 2rem;  
   margin-bottom: 1.5rem;  
-  position: relative;  
-  display: inline-block;  
-}  
-
-.section-title::after {  
-  content: '';  
-  position: absolute;  
-  bottom: -10px;  
-  left: 50%;  
-  transform: translateX(-50%);  
-  width: 50px;  
-  height: 3px;  
-  background: linear-gradient(to right, #90c0c0, hsl(170, 80%, 31%));  
-  border-radius: 2px;  
 }  
 
 .about-text {  
   color: #4b5563;  
   font-size: 1.2rem;  
   line-height: 1.8;  
-  animation: slideIn 1s ease-out;  
-}  
-
-@keyframes slideIn {  
-  from {  
-    opacity: 0;  
-    transform: translateX(-20px);  
-  }  
-  to {  
-    opacity: 1;  
-    transform: translateX(0);  
-  }  
 }  
 
 /* Features Section */  
@@ -200,40 +141,16 @@ export default {
   border-radius: 15px;  
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  
   text-align: center;  
-  transition: all 0.3s ease;  
-  position: relative;  
-  overflow: hidden;  
-}  
-
-.feature-card::before {  
-  content: '';  
-  position: absolute;  
-  top: 0;  
-  left: 0;  
-  right: 0;  
-  height: 4px;  
-  background: linear-gradient(to right, #90c0c0, hsl(170, 80%, 31%));  
-  transform: scaleX(0);  
   transition: transform 0.3s ease;  
 }  
 
 .feature-card:hover {  
   transform: translateY(-5px);  
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);  
-}  
-
-.feature-card:hover::before {  
-  transform: scaleX(1);  
 }  
 
 .feature-icon {  
   font-size: 3rem;  
   margin-bottom: 1rem;  
-  transition: transform 0.3s ease;  
-}  
-
-.feature-card:hover .feature-icon {  
-  transform: scale(1.1);  
 }  
 
 .feature-card h3 {  
@@ -267,19 +184,6 @@ export default {
 
   .about-text {  
     font-size: 1.1rem;  
-  }  
-
-  .feature-card {  
-    margin: 0 1rem;  
-  }  
-}  
-
-@keyframes pageLoad {  
-  from {  
-    opacity: 0;  
-  }  
-  to {  
-    opacity: 1;  
   }  
 }  
 </style>
