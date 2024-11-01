@@ -1,8 +1,5 @@
 <template>
     <div class="container">
-      <div class="button-container">
-        <button @click="goHome" class="home-button">Conheça o Aplicativo</button>
-      </div>
       <!-- Seção do Pet -->
       <div v-if="pet" class="card pet-card">
         <h2 class="title">Nome: {{ pet.nome }}</h2>
@@ -98,9 +95,6 @@
         this.showModal = false;
         this.selectedImage = null;
         document.body.style.overflow = 'auto'; // Restaura rolagem
-      },
-      goHome() {
-        this.$router.push({ name: 'Sobre' });
       }
     },
     async created() {
@@ -136,31 +130,7 @@
     max-width: 600px;
     margin: 2rem auto;
     padding: 0 1rem;
-    position: relative;
   }
-  .button-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-  }
-
-  .home-button {
-    background: hsl(170, 80%, 31%);
-    color: black;
-    font-weight: bold;
-    padding: 0.75rem 1.5rem;
-    font-size: 1.25rem;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-  }
-
-  .home-button:hover {
-    background-color: white;
-    transform: scale(1.05);
-  }
-
 
   .card {
     background: white;
@@ -275,13 +245,12 @@
 
   .label {
     color: black;
-
+    font-weight: 600;
+    min-width: 80px;
   }
 
   .value {
     color: #202924;
-    font-weight: bold;
-    font-size: 18px;
   }
 
   .owner-info {
