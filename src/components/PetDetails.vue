@@ -100,7 +100,7 @@
         document.body.style.overflow = 'auto'; // Restaura rolagem
       },
       goHome() {
-        this.$router.push({ name: 'home' }); // Assume que você tem uma rota nomeada 'home'.
+        this.$router.push({ name: 'Sobre' });
       }
     },
     async created() {
