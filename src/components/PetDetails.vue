@@ -3,7 +3,7 @@
     <div class="button-container">
       <button @click="goHome" class="home-button">Conheça o Aplicativo</button>
     </div>
-    <!-- Seção do Pet -->
+    <!-- Card do Pet -->
     <div v-if="pet" class="card pet-card">
       <h2 class="title">Nome: {{ pet.nome }}</h2>
 
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <!-- Seção do Tutor -->
+    <!-- Card do tutor -->
     <div v-if="dono" class="card owner-card">
       <h2 class="subtitle">Informações do Tutor</h2>
 
@@ -63,7 +63,7 @@
       </div>
     </div>
 
-    <!-- Modal para visualização da imagem -->
+    <!-- utilizando Modal para visualização da imagem -->
     <div v-if="showModal" class="modal" @click="closeModal">
       <div class="modal-content">
         <span class="close-button" @click="closeModal">&times;</span>
@@ -75,7 +75,7 @@
 
 <script>
 import { db } from '../firebaseDB';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Conexão com o firestore
 
 export default {
   data() {
@@ -92,7 +92,7 @@ export default {
     openModal(imageUrl) {
       this.selectedImage = imageUrl;
       this.showModal = true;
-      document.body.style.overflow = 'hidden'; // Previne rolagem quando modal está aberto
+      document.body.style.overflow = 'hidden'; // Bloqueio da rolagem
     },
     closeModal() {
       this.showModal = false;
@@ -105,26 +105,26 @@ export default {
   },
   async created() {
     const db = getFirestore();
-    const petId = this.$route.params.PetsId;
+    const petId = this.$route.params.PetsId; // Extrair id do pet da rota atual
 
     try {
-      const petDocRef = doc(db, 'Pets', petId);
+      const petDocRef = doc(db, 'Pets', petId); // Cria uma referência para o documento do pet específico no Firestore
       const petDocSnap = await getDoc(petDocRef);
 
-      if (petDocSnap.exists()) {
-        this.pet = petDocSnap.data();
-        this.pet.imagemUrl = petDocSnap.data().imagemUrl;
+      if (petDocSnap.exists()) { // Verificação se o documento do pet existe
+        this.pet = petDocSnap.data(); // Armazenando os dados do pet
+        this.pet.imagemUrl = petDocSnap.data().imagemUrl; // Armazenando a imagem
         const userId = this.pet.userId;
 
-        const userDocRef = doc(db, 'Usuarios', userId);
+        const userDocRef = doc(db, 'Usuarios', userId); // Cria uma referência para o documento do usuário específico em Usuarios
         const userDocSnap = await getDoc(userDocRef);
 
-        if (userDocSnap.exists()) {
+        if (userDocSnap.exists()) { //Se o documento do usuário existir, salva os dados do dono em this.dono e atualiza a foto do dono.
           this.dono = userDocSnap.data();
           this.dono.foto = userDocSnap.data().foto;
         }
       }
-    } catch (error) {
+    } catch (error) { // Em caso de falha em qualquer parte do código dentro do try, imprime um erro no console com a mensagem "Erro ao buscar dados:"
       console.error("Erro ao buscar dados:", error);
     }
   }

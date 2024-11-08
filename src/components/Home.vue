@@ -1,6 +1,6 @@
 <template>
    <div class="home-container">
-    <!-- Hero Section -->
+    <!-- Seção Cabeçalho -->
     <section class="hero-section">
       <div class="hero-content">
         <img
@@ -13,7 +13,7 @@
       </div>
     </section>
 
-    <!-- About Section -->
+    <!-- Seção sobre -->
     <section class="about-section">
       <div class="about-content">
         <h2 class="section-title">Sobre o Projeto</h2>
@@ -25,7 +25,7 @@
       </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- Início dos cards-->
     <section class="features-section">
       <div class="features-grid">
         <div class="feature-card">
@@ -44,7 +44,7 @@
           <p>Interface simples e intuitiva para facilitar o registro e busca de pets.</p>
         </div>
       </div>
-    </section>
+    </section>  <!-- Final dos cards-->
   </div>
 </template>
 

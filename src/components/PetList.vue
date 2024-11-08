@@ -19,14 +19,14 @@
 </template>
 
 <script>
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Obtendo dados do Firestore
 
 export default {
   data() {
     return {
       pets: [],
       isLoading: true,
-      error: null
+      error: null // Armazenamento de mensagens de erro
     };
   },
   async created() {
@@ -38,11 +38,11 @@ export default {
       querySnapshot.forEach((doc) => {
         petsData.push({ id: doc.id, ...doc.data() }); // Adiciona o id do documento ao objeto
       });
-      this.pets = petsData;
+      this.pets = petsData; // Coleta os dados dos documentos em querySnapshot e constrói uma lista de objetos que incluem tanto os dados do documento quanto seu ID, e armazena essa lista em petsData.
     } catch (error) {
       this.error = 'Erro ao buscar dados dos pets: ' + error.message;
     } finally {
-      this.isLoading = false;
+      this.isLoading = false; // Independentemente do sucesso ou falha, isLoading é definido como false para indicar que o processo de carregamento terminou.
     }
   }
 };
