@@ -5,7 +5,7 @@
       <div class="hero-content">
         <img
           class="logo-image"
-          src="https://firebasestorage.googleapis.com/v0/b/pet-connect-c53f1.appspot.com/o/imagens%2Flogopetconnect.png?alt=media&token=234db5bb-947f-4b4d-ad4c-8fa656b33ec7"
+          src="https://firebasestorage.googleapis.com/v0/b/pet-connect-c53f1.appspot.com/o/imagens%2FLogoNew.png?alt=media&token=b7bc68f5-d033-43e2-a5f5-7211e24df816"
           alt="Logo Pet Connect"
         >
         <h1 class="main-title">Pet Connect</h1>
