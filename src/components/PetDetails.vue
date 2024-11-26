@@ -145,7 +145,7 @@ export default {
 }
 
 .home-button {
-  background: hsl(170, 80%, 31%);
+  background: #4a76d3;
   color: black;
   font-weight: bold;
   padding: 0.75rem 1.5rem;
@@ -157,7 +157,7 @@ export default {
 }
 
 .home-button:hover {
-  background-color: white;
+  background-color: #154ABC;
   transform: scale(1.05);
 }
 
@@ -165,7 +165,7 @@ export default {
 .card {
   background: white;
   border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px #154ABC;
   padding: 2rem;
   margin-bottom: 2rem;
 }
@@ -197,7 +197,7 @@ export default {
   height: 200px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid hsl(170, 80%, 31%);
+  border: 4px solid #154ABC;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
@@ -261,7 +261,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  background: #90c0c0;
+  background: #4a76d3;
   padding: 1.5rem;
   border-radius: 10px;
 }
@@ -292,12 +292,12 @@ export default {
 }
 
 .pet-card {
-  border-top: 5px solid hsl(170, 80%, 31%);
+  border-top: 5px solid #154ABC;
 }
 
 .owner-card {
   background: #fafafa;
-  border-top: 5px solid hsl(170, 80%, 31%);
+  border-top: 5px solid #154ABC;
 }
 
 @media (max-width: 640px) {

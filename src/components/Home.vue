@@ -57,17 +57,17 @@ export default {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  background: linear-gradient(to bottom, #8cf1d3, #154ABC);
   animation: pageLoad 0.5s ease-out;
 }
 
 /* Hero Section */
 .hero-section {
   padding: 4rem 2rem;
-  background: linear-gradient(135deg,
-    #004d40 0%,
-    #00695c 50%,
-    #004d40 100%
+  background: linear-gradient(360deg,
+    #154ABC 100%,
+    #4fcea8 50%,
+    #154ABC 100%
   );
   color: white;
   text-align: center;
@@ -97,7 +97,7 @@ export default {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  
+
   margin-bottom: 1.5rem;
   transition: transform 0.3s ease;
 }
