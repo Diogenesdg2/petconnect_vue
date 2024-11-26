@@ -146,7 +146,7 @@ export default {
 
 .home-button {
   background: #4a76d3;
-  color: black;
+  color: white;
   font-weight: bold;
   padding: 0.75rem 1.5rem;
   font-size: 1.25rem;
@@ -274,12 +274,12 @@ export default {
 }
 
 .label {
-  color: black;
+  color: white;
 
 }
 
 .value {
-  color: #202924;
+  color: white;
   font-weight: bold;
   font-size: 18px;
 }
