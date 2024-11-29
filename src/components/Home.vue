@@ -124,6 +124,7 @@ export default {
 }
 
 .main-title {
+  font-family: poppins;
   font-size: 3.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
