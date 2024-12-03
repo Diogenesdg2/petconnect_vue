@@ -71,11 +71,18 @@
       </div>
     </div>
   </div>
+  <div>
+    <div class="button-container">
+      <button @click="enviarAlerta" class="home-button">
+        Emitir Alerta
+      </button>
+    </div>
+  </div>
 </template>
 
 <script>
 import { db } from '../firebaseDB';
-import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Conexão com o firestore
+import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Conexão com o firestore
 
 export default {
   data() {
@@ -85,7 +92,8 @@ export default {
       isLoading: true,
       error: null,
       showModal: false,
-      selectedImage: null
+      selectedImage: null,
+      enviandoAlerta: false
     };
   },
   methods: {
@@ -127,8 +135,55 @@ export default {
     } catch (error) { // Em caso de falha em qualquer parte do código dentro do try, imprime um erro no console com a mensagem "Erro ao buscar dados:"
       console.error("Erro ao buscar dados:", error);
     }
-  }
-};
+  },
+  async enviarAlerta() {
+      if (!this.dono?.telefone) {
+        alert('Não foi possível enviar o alerta: telefone do tutor não disponível');
+        return;
+      }
+
+      if (!this.pet?.id) {
+        alert('Informações do pet não disponíveis');
+        return;
+      }
+
+      this.enviandoAlerta = true;
+
+      try {
+        const db = getFirestore();
+        const alertasRef = collection(db, 'Alertas');
+
+        // Criar objeto do alerta
+        const novoAlerta = {
+          petId: this.$route.params.PetsId,
+          userId: this.pet.userId,
+          telefoneDestino: this.dono.telefone,
+          nomePet: this.pet.nome,
+          nomeTutor: this.dono.nome,
+          status: 'pendente',
+          criadoEm: serverTimestamp(),
+          tipo: 'sms',
+          mensagem: `Alerta de emergência para o pet ${this.pet.nome}`
+        };
+
+        // Salvar o alerta no Firestore
+        const docRef = await addDoc(alertasRef, novoAlerta);
+
+        // Atualizar status do alerta após o envio bem-sucedido
+        await updateDoc(doc(db, 'Alertas', docRef.id), {
+          status: 'enviado'
+        });
+
+        alert(`Alerta registrado com sucesso para o pet ${this.pet.nome}`);
+
+      } catch (error) {
+        console.error("Erro ao registrar alerta:", error);
+        alert('Erro ao enviar o alerta. Por favor, tente novamente.');
+      } finally {
+        this.enviandoAlerta = false;
+      }
+    }
+  };
 </script>
 
 <style scoped>
@@ -322,5 +377,23 @@ export default {
     width: 150px;
     height: 150px;
   }
+
+  .alertb {
+  background: #4a76d3;
+  color: white;
+  font-weight: bold;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.alertb:hover {
+  background-color: #154ABC;
+  transform: scale(1.05);
+}
+
 }
 </style>
