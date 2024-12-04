@@ -71,13 +71,13 @@
       </div>
     </div>
   </div>
-  <div>
+ <!-- <div>
     <div class="button-container">
       <button @click="enviarAlerta" class="home-button">
         Emitir Alerta
       </button>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script>
