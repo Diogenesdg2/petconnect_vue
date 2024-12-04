@@ -82,7 +82,7 @@
 
 <script>
 import { db } from '../firebaseDB';
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Conexão com o firestore
+import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default {
   data() {
@@ -100,90 +100,101 @@ export default {
     openModal(imageUrl) {
       this.selectedImage = imageUrl;
       this.showModal = true;
-      document.body.style.overflow = 'hidden'; // Bloqueio da rolagem
+      document.body.style.overflow = 'hidden';
     },
     closeModal() {
       this.showModal = false;
       this.selectedImage = null;
-      document.body.style.overflow = 'auto'; // Restaura rolagem
+      document.body.style.overflow = 'auto';
     },
     goHome() {
       this.$router.push({ name: 'Sobre' });
+    },
+    // Adicionando o novo método dentro do objeto methods
+    async obterESalvarLocalizacao() {
+    if (!this.dono?.telefone) {
+      console.error('Telefone do tutor não disponível');
+      return;
     }
-  },
-  async created() {
-    const db = getFirestore();
-    const petId = this.$route.params.PetsId; // Extrair id do pet da rota atual
 
-    try {
-      const petDocRef = doc(db, 'Pets', petId); // Cria uma referência para o documento do pet específico no Firestore
-      const petDocSnap = await getDoc(petDocRef);
-
-      if (petDocSnap.exists()) { // Verificação se o documento do pet existe
-        this.pet = petDocSnap.data(); // Armazenando os dados do pet
-        this.pet.imagemUrl = petDocSnap.data().imagemUrl; // Armazenando a imagem
-        const userId = this.pet.userId;
-
-        const userDocRef = doc(db, 'Usuarios', userId); // Cria uma referência para o documento do usuário específico em Usuarios
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) { //Se o documento do usuário existir, salva os dados do dono em this.dono e atualiza a foto do dono.
-          this.dono = userDocSnap.data();
-          this.dono.foto = userDocSnap.data().foto;
-        }
-      }
-    } catch (error) { // Em caso de falha em qualquer parte do código dentro do try, imprime um erro no console com a mensagem "Erro ao buscar dados:"
-      console.error("Erro ao buscar dados:", error);
-    }
-  },
-  async enviarAlerta() {
-      if (!this.dono?.telefone) {
-        alert('Não foi possível enviar o alerta: telefone do tutor não disponível');
-        return;
-      }
-
-      if (!this.pet?.id) {
-        alert('Informações do pet não disponíveis');
-        return;
-      }
-
-      this.enviandoAlerta = true;
-
+    if ("geolocation" in navigator) {
       try {
-        const db = getFirestore();
-        const alertasRef = collection(db, 'Alertas');
-
-        // Criar objeto do alerta
-        const novoAlerta = {
-          petId: this.$route.params.PetsId,
-          userId: this.pet.userId,
-          telefoneDestino: this.dono.telefone,
-          nomePet: this.pet.nome,
-          nomeTutor: this.dono.nome,
-          status: 'pendente',
-          criadoEm: serverTimestamp(),
-          tipo: 'sms',
-          mensagem: `Alerta de emergência para o pet ${this.pet.nome}`
-        };
-
-        // Salvar o alerta no Firestore
-        const docRef = await addDoc(alertasRef, novoAlerta);
-
-        // Atualizar status do alerta após o envio bem-sucedido
-        await updateDoc(doc(db, 'Alertas', docRef.id), {
-          status: 'enviado'
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
         });
 
-        alert(`Alerta registrado com sucesso para o pet ${this.pet.nome}`);
+        const localizacao = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          telefone: this.dono.telefone,
+          timestamp: serverTimestamp(),
+          petId: this.$route.params.PetsId,
+          nomePet: this.pet.nome,
+          nomeTutor: this.dono.nome
+        };
 
+        const db = getFirestore();
+        const localizacoesRef = collection(db, 'Localizacoes');
+        await addDoc(localizacoesRef, localizacao);
+
+        console.log('Localização salva com sucesso');
       } catch (error) {
-        console.error("Erro ao registrar alerta:", error);
-        alert('Erro ao enviar o alerta. Por favor, tente novamente.');
-      } finally {
-        this.enviandoAlerta = false;
+        let mensagemErro = 'Erro ao obter localização';
+
+        // Tratamento específico de erros de geolocalização
+        if (error.code === 1) {
+          mensagemErro = 'Permissão de localização negada. Por favor, permita o acesso à sua localização.';
+        } else if (error.code === 2) {
+          mensagemErro = 'Localização não disponível no momento.';
+        } else if (error.code === 3) {
+          mensagemErro = 'Tempo limite excedido ao obter localização.';
+        }
+
+        console.error(mensagemErro, error);
+        alert(mensagemErro);
       }
+    } else {
+      const mensagem = 'Geolocalização não é suportada neste navegador.';
+      console.error(mensagem);
+      alert(mensagem);
     }
-  };
+  }
+},
+
+  async created() {
+    const db = getFirestore();
+    const petId = this.$route.params.PetsId;
+
+    try {
+      const petDocRef = doc(db, 'Pets', petId);
+      const petDocSnap = await getDoc(petDocRef);
+
+      if (petDocSnap.exists()) {
+        this.pet = petDocSnap.data();
+        this.pet.imagemUrl = petDocSnap.data().imagemUrl;
+        const userId = this.pet.userId;
+
+        const userDocRef = doc(db, 'Usuarios', userId);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          this.dono = userDocSnap.data();
+          this.dono.foto = userDocSnap.data().foto;
+
+          // Chamada do método após carregar os dados
+          await this.obterESalvarLocalizacao();
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    }
+  }
+};
+
 </script>
 
 <style scoped>
