@@ -195,7 +195,7 @@ export default {
 }
 
 .login-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: black;
 }
 
 .login-input:focus {

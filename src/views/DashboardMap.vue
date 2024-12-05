@@ -1,7 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <!-- Container do mapa -->
-    <div id="map" class="map-container"></div>
+    <div id="map" ref="mapContainer" class="map-container"></div>
 
     <!-- Popup de informações -->
     <div v-if="selectedLocation" class="location-info">
@@ -9,96 +8,133 @@
       <p><strong>Nome do Pet:</strong> {{ selectedLocation.nomePet }}</p>
       <p><strong>Tutor:</strong> {{ selectedLocation.nomeTutor }}</p>
       <p><strong>Telefone:</strong> {{ selectedLocation.telefone }}</p>
-      <p><strong>Data:</strong> {{ formatDate(selectedLocation.timestamp) }}</p>
+      <p><strong>Última Atualização:</strong> {{ formatTimestamp(selectedLocation.timestamp) }}</p>
       <button @click="selectedLocation = null" class="close-button">Fechar</button>
+    </div>
+
+    <!-- Mensagem quando não há localização -->
+    <div v-if="noLocationFound" class="no-location-info">
+      Nenhuma localização encontrada para seu pet.
     </div>
   </div>
 </template>
 
 <script>
 import { onMounted, ref } from 'vue'
-import { getFirestore, collection, getDocs } from 'firebase/firestore'
-import 'leaflet/dist/leaflet.css'
+import { getFirestore, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
 import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import icon from 'leaflet/dist/images/marker-icon.png'
+import iconShadow from 'leaflet/dist/images/marker-shadow.png'
 
 export default {
   name: 'DashboardMap',
   setup() {
-    const map = ref(null)
-    const locations = ref([])
+    const mapContainer = ref(null)
     const selectedLocation = ref(null)
+    const noLocationFound = ref(false)
+    let map = null
 
-    // Função para formatar a data
-    const formatDate = (timestamp) => {
+    const formatTimestamp = (timestamp) => {
       if (!timestamp) return ''
-      return new Date(timestamp).toLocaleString('pt-BR')
+      const date = new Date(timestamp)
+      return date.toLocaleString('pt-BR')
     }
 
-    // Inicializar mapa e carregar dados
-    onMounted(async () => {
-      // Inicializar mapa
-      map.value = L.map('map').setView([-22.1740094, -47.3938169], 13)
+    const initMap = async () => {
+      const auth = getAuth()
+      const currentUser = auth.currentUser
 
-      // Adicionar layer do OpenStreetMap
+      if (!currentUser) {
+        console.error('Usuário não está logado')
+        return
+      }
+
+      // Inicializar mapa
+      map = L.map('map').setView([-22.1740094, -47.3938169], 13)
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
-      }).addTo(map.value)
+      }).addTo(map)
 
-      // Buscar localizações no Firestore
-      const db = getFirestore()
-      const locationsCollection = collection(db, 'Localizacoes')
+      // Configurar ícone padrão
+      let DefaultIcon = L.icon({
+        iconUrl: icon,
+        shadowUrl: iconShadow,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41]
+      })
+      L.Marker.prototype.options.icon = DefaultIcon
 
       try {
-        const snapshot = await getDocs(locationsCollection)
-        locations.value = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        const db = getFirestore()
 
-        // Adicionar marcadores ao mapa
-        locations.value.forEach(location => {
-          const marker = L.marker([location.latitude, location.longitude])
-            .addTo(map.value)
+        // Buscar o último registro do pet do usuário logado
+        const locationsRef = collection(db, 'Localizacoes')
+        const q = query(
+          locationsRef,
+          where('petID', '==', currentUser.uid), // Assumindo que petID é o ID do usuário
+          orderBy('timestamp', 'desc'),
+          limit(1)
+        )
+
+        const querySnapshot = await getDocs(q)
+
+        if (querySnapshot.empty) {
+          console.log('Nenhuma localização encontrada')
+          noLocationFound.value = true
+          return
+        }
+
+        const doc = querySnapshot.docs[0]
+        const data = doc.data()
+        console.log('Localização encontrada:', data)
+
+        // Adicionar marcador ao mapa
+        if (data.latitude && data.longitude) {
+          // Centralizar mapa na localização do pet
+          map.setView([data.latitude, data.longitude], 15)
+
+          const marker = L.marker([data.latitude, data.longitude])
+            .addTo(map)
             .bindPopup(`
-              <b>${location.nomePet}</b><br>
-              Tutor: ${location.nomeTutor}<br>
-              <button onclick="showDetails('${location.id}')" class="marker-button">
-                Ver Detalhes
-              </button>
+              <b>${data.nomePet}</b><br>
+              Última atualização: ${formatTimestamp(data.timestamp)}
             `)
 
-          // Adicionar evento de clique no marcador
           marker.on('click', () => {
-            selectedLocation.value = location
+            selectedLocation.value = data
           })
-        })
 
-        // Adicionar método global para acesso via popup
-        window.showDetails = (locationId) => {
-          const location = locations.value.find(l => l.id === locationId)
-          if (location) {
-            selectedLocation.value = location
-          }
+          // Abrir popup automaticamente
+          marker.openPopup()
         }
 
       } catch (error) {
-        console.error('Erro ao buscar localizações:', error)
+        console.error('Erro ao carregar dados:', error)
       }
+    }
+
+    onMounted(async () => {
+      await initMap()
     })
 
     return {
+      mapContainer,
       selectedLocation,
-      formatDate
+      noLocationFound,
+      formatTimestamp
     }
   }
 }
 </script>
 
-<style scoped>
+<style>
 .dashboard-container {
-  position: relative;
   width: 100%;
   height: 100vh;
+  position: relative;
 }
 
 .map-container {
@@ -119,6 +155,19 @@ export default {
   max-width: 300px;
 }
 
+.no-location-info {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  text-align: center;
+}
+
 .close-button {
   background: #154ABC;
   color: white;
@@ -132,27 +181,14 @@ export default {
 
 .close-button:hover {
   background: #0d3285;
-  transform: translateY(-2px);
 }
 
-/* Estilo para o popup do marcador */
-:global(.marker-button) {
-  background: #154ABC;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 12px;
-  cursor: pointer;
-  margin-top: 5px;
-  font-size: 12px;
-}
-
-:global(.leaflet-popup-content-wrapper) {
+.leaflet-popup-content-wrapper {
   border-radius: 8px;
   padding: 5px;
 }
 
-:global(.leaflet-popup-content) {
+.leaflet-popup-content {
   margin: 8px;
 }
 </style>
