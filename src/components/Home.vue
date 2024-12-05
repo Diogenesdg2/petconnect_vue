@@ -186,7 +186,7 @@ export default {
 .login-input {
   width: 200px;
   padding: 0.5rem 1rem;
-  border: 4px solid #004d40;
+  border: 4px solid #154ABC;
   border-radius: 20px;
   background: white;
   color: black;
@@ -208,7 +208,7 @@ export default {
   padding: 0.5rem 1.5rem;
   border: none;
   border-radius: 20px;
-  background: linear-gradient(to right, #004d40, #00695c);
+  background: #4a76d3;
   color: white;
   font-size: 1rem;
   cursor: pointer;
@@ -219,7 +219,7 @@ export default {
 .login-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(to right, #00695c, #004d40);
+  background: #154ABC;
 }
 
 /* Media query atualizado */
