@@ -1,310 +1,406 @@
 <template>
-   <div class="home-container">
-    <!-- Seção Cabeçalho -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <img
-          class="logo-image"
-          src="https://firebasestorage.googleapis.com/v0/b/pet-connect-c53f1.appspot.com/o/imagens%2FLogoNew.png?alt=media&token=b7bc68f5-d033-43e2-a5f5-7211e24df816"
-          alt="Logo Pet Connect"
-        >
-        <h1 class="main-title">Pet Connect</h1>
-        <p class="tagline">Conectando corações perdidos aos seus lares</p>
+  <div class="home-container">
+  <!-- Login Section -->
+    <div class="login-section">
+      <div class="login-container">
+        <div class="login-form">
+          <input
+            type="text"
+            placeholder="Usuário"
+            class="login-input"
+          >
+          <input
+            type="password"
+            placeholder="Senha"
+            class="login-input"
+          >
+          <button class="login-button">Entrar</button>
+        </div>
       </div>
-    </section>
+    </div>
+   <!-- Seção Cabeçalho -->
+   <section class="hero-section">
+     <div class="hero-content">
+       <img
+         class="logo-image"
+         src="https://firebasestorage.googleapis.com/v0/b/pet-connect-c53f1.appspot.com/o/imagens%2FLogoNew.png?alt=media&token=b7bc68f5-d033-43e2-a5f5-7211e24df816"
+         alt="Logo Pet Connect"
+       >
+       <h1 class="main-title">Pet Connect</h1>
+       <p class="tagline">Conectando corações perdidos aos seus lares</p>
+     </div>
+   </section>
 
-    <!-- Seção sobre -->
-    <section class="about-section">
-      <div class="about-content">
-        <h2 class="section-title">Sobre o Projeto</h2>
-        <p class="about-text">
-          Esta plataforma faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.
-          Através de uma interface intuitiva, facilitamos a comunicação e o compartilhamento de informações
-          sobre pets desaparecidos, criando assim uma rede de apoio entre os tutores e a comunidade.
-        </p>
-      </div>
-    </section>
+   <!-- Seção sobre -->
+   <section class="about-section">
+     <div class="about-content">
+       <h2 class="section-title">Sobre o Projeto</h2>
+       <p class="about-text">
+         Esta plataforma faz parte de um projeto de TCC dedicado a reunir pets perdidos com seus tutores.
+         Através de uma interface intuitiva, facilitamos a comunicação e o compartilhamento de informações
+         sobre pets desaparecidos, criando assim uma rede de apoio entre os tutores e a comunidade.
+       </p>
+     </div>
+   </section>
 
-    <!-- Início dos cards-->
-    <section class="features-section">
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">⬇️</div>
-          <h3>Download do Aplicativo</h3>
-          <p>Baixe o aplicativo para poder efetuar a cadastro do seu Pet.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💝</div>
-          <h3>Comunidade Unida</h3>
-          <p>Uma rede de apoio formada por pessoas comprometidas em ajudar pets perdidos.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📱</div>
-          <h3>Fácil de Usar</h3>
-          <p>Interface simples e intuitiva para facilitar o registro e busca de pets.</p>
-        </div>
-      </div>
-    </section>  <!-- Final dos cards-->
-  </div>
+   <!-- Início dos cards-->
+   <section class="features-section">
+     <div class="features-grid">
+       <div class="feature-card">
+         <div class="feature-icon">⬇️</div>
+         <h3>Download do Aplicativo</h3>
+         <p>Baixe o aplicativo para poder efetuar a cadastro do seu Pet.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">💝</div>
+         <h3>Comunidade Unida</h3>
+         <p>Uma rede de apoio formada por pessoas comprometidas em ajudar pets perdidos.</p>
+       </div>
+       <div class="feature-card">
+         <div class="feature-icon">📱</div>
+         <h3>Fácil de Usar</h3>
+         <p>Interface simples e intuitiva para facilitar o registro e busca de pets.</p>
+       </div>
+     </div>
+   </section>  <!-- Final dos cards-->
+ </div>
 </template>
 
 <script>
 export default {
-  name: "PetConnect"
+ name: "PetConnect"
 }
 </script>
 
+
 <style scoped>
+
+.login-section {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  backdrop-filter: blur(5px);
+}
+
+.login-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-input {
+  width: 200px;
+  padding: 0.5rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.login-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.login-button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(to right, #004d40, #00695c);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(to right, #00695c, #004d40);
+}
+
+/* Media query atualizado */
+@media (max-width: 768px) {
+  .login-form {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .login-input {
+    width: 100%;
+  }
+
+  .login-button {
+    width: 100%;
+  }
+}
 .home-container {
-  min-height: 100vh;
-  background: linear-gradient(to bottom, #8cf1d3, #154ABC);
-  animation: pageLoad 0.5s ease-out;
+ min-height: 100vh;
+ background: linear-gradient(to bottom, #8cf1d3, #154ABC);
+ animation: pageLoad 0.5s ease-out;
 }
 
 /* Hero Section */
 .hero-section {
-  padding: 4rem 2rem;
-  background: linear-gradient(360deg,
-    #154ABC 100%,
-    #4fcea8 50%,
-    #154ABC 100%
-  );
-  color: white;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+ padding: 4rem 2rem;
+ background: linear-gradient(360deg,
+   #154ABC 100%,
+   #4fcea8 50%,
+   #154ABC 100%
+ );
+ color: white;
+ text-align: center;
+ position: relative;
+ overflow: hidden;
 }
 
 .hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(#90c0c0, rgba(0,0,0,0.2));
-  z-index: 1;
+ content: '';
+ position: absolute;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
+ background: linear-gradient(#90c0c0, rgba(0,0,0,0.2));
+ z-index: 1;
 }
 
 .hero-content {
-  max-width: 800px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
+ max-width: 800px;
+ margin: 0 auto;
+ position: relative;
+ z-index: 2;
 }
 
 .logo-image {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
+ width: 180px;
+ height: 180px;
+ border-radius: 50%;
 
-  margin-bottom: 1.5rem;
-  transition: transform 0.3s ease;
+ margin-bottom: 1.5rem;
+ transition: transform 0.3s ease;
 }
 
 .logo-image:hover {
-  transform: scale(1.05);
+ transform: scale(1.05);
 }
 
 @keyframes titlePulse {
-  0% {
-    transform: scale(1);
-    color: white;
-  }
+ 0% {
+   transform: scale(1);
+   color: white;
+ }
 
-  50% {
-    transform: scale(1.1);
-    color: #e6ffe6;
-  }
+ 50% {
+   transform: scale(1.1);
+   color: #e6ffe6;
+ }
 
-  100% {
-    transform: scale(1);
-    color: white;
-  }
+ 100% {
+   transform: scale(1);
+   color: white;
+ }
 }
 
 .main-title {
-  font-family: poppins;
-  font-size: 3.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  animation: titlePulse 2s ease-in-out infinite;
-  position: relative;
-  letter-spacing: 2px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+ font-family: poppins;
+ font-size: 3.5rem;
+ font-weight: bold;
+ margin-bottom: 1rem;
+ display: inline-block;
+ padding: 0.5rem 1rem;
+ cursor: pointer;
+ animation: titlePulse 2s ease-in-out infinite;
+ position: relative;
+ letter-spacing: 2px;
+ text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tagline {
-  font-size: 1.5rem;
-  opacity: 0.9;
-  animation: fadeIn 1s ease-out;
+ font-size: 1.5rem;
+ opacity: 0.9;
+ animation: fadeIn 1s ease-out;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 0.9;
-    transform: translateY(0);
-  }
+ from {
+   opacity: 0;
+   transform: translateY(20px);
+ }
+ to {
+   opacity: 0.9;
+   transform: translateY(0);
+ }
 }
 
 /* About Section */
 .about-section {
-  padding: 4rem 2rem;
-  background: white;
+ padding: 4rem 2rem;
+ background: white;
 }
 
 .about-content {
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
+ max-width: 800px;
+ margin: 0 auto;
+ text-align: center;
 }
 
 .section-title {
-  color: #2c3e50;
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  display: inline-block;
+ color: #2c3e50;
+ font-size: 2rem;
+ margin-bottom: 1.5rem;
+ position: relative;
+ display: inline-block;
 }
 
 .section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 3px;
-  background: linear-gradient(to right, #004d40, #00695c);
-  border-radius: 2px;
+ content: '';
+ position: absolute;
+ bottom: -10px;
+ left: 50%;
+ transform: translateX(-50%);
+ width: 50px;
+ height: 3px;
+ background: linear-gradient(to right, #004d40, #00695c);
+ border-radius: 2px;
 }
 
 .about-text {
-  color: #4b5563;
-  font-size: 1.2rem;
-  line-height: 1.8;
-  animation: slideIn 1s ease-out;
+ color: #4b5563;
+ font-size: 1.2rem;
+ line-height: 1.8;
+ animation: slideIn 1s ease-out;
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+ from {
+   opacity: 0;
+   transform: translateX(-20px);
+ }
+ to {
+   opacity: 1;
+   transform: translateX(0);
+ }
 }
 
 /* Features Section */
 .features-section {
-  padding: 4rem 2rem;
-  background: #f8f9fa;
+ padding: 4rem 2rem;
+ background: #f8f9fa;
 }
 
 .features-grid {
-  max-width: 800px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  padding: 0 1rem;
+ max-width: 800px;
+ margin: 0 auto;
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+ gap: 2rem;
+ padding: 0 1rem;
 }
 
 .feature-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+ background: white;
+ padding: 2rem;
+ border-radius: 15px;
+ box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+ text-align: center;
+ transition: all 0.3s ease;
+ position: relative;
+ overflow: hidden;
 }
 
 .feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(to right, #004d40, #00695c);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
+ content: '';
+ position: absolute;
+ top: 0;
+ left: 0;
+ right: 0;
+ height: 4px;
+ background: linear-gradient(to right, #004d40, #00695c);
+ transform: scaleX(0);
+ transition: transform 0.3s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+ transform: translateY(-5px);
+ box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 .feature-card:hover::before {
-  transform: scaleX(1);
+ transform: scaleX(1);
 }
 
 .feature-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  transition: transform 0.3s ease;
+ font-size: 3rem;
+ margin-bottom: 1rem;
+ transition: transform 0.3s ease;
 }
 
 .feature-card:hover .feature-icon {
-  transform: scale(1.1);
+ transform: scale(1.1);
 }
 
 .feature-card h3 {
-  color: #2c3e50;
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+ color: #2c3e50;
+ font-size: 1.5rem;
+ margin-bottom: 1rem;
 }
 
 .feature-card p {
-  color: #4b5563;
+ color: #4b5563;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .main-title {
-    font-size: 2.5rem;
-  }
+ .main-title {
+   font-size: 2.5rem;
+ }
 
-  .tagline {
-    font-size: 1.2rem;
-  }
+ .tagline {
+   font-size: 1.2rem;
+ }
 
-  .logo-image {
-    width: 150px;
-    height: 150px;
-  }
+ .logo-image {
+   width: 150px;
+   height: 150px;
+ }
 
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
+ .features-grid {
+   grid-template-columns: 1fr;
+ }
 
-  .about-text {
-    font-size: 1.1rem;
-  }
+ .about-text {
+   font-size: 1.1rem;
+ }
 
-  .feature-card {
-    margin: 0 1rem;
-  }
+ .feature-card {
+   margin: 0 1rem;
+ }
 }
 
 @keyframes pageLoad {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+ from {
+   opacity: 0;
+ }
+ to {
+   opacity: 1;
+ }
 }
 </style>

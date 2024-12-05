@@ -3,6 +3,8 @@ import PetDetails from '../components/PetDetails.vue'
 import Homepage from '../components/Home.vue'
 import PetList from '@/components/PetList.vue'
 
+
+
 const routes = [
   {
     path: '/pet/:PetsId',
