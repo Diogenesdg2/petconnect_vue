@@ -43,79 +43,127 @@ export default {
     }
 
     const initMap = async () => {
-      const auth = getAuth()
-      const currentUser = auth.currentUser
+  const auth = getAuth()
+  const currentUser = auth.currentUser
 
-      if (!currentUser) {
-        console.error('Usuário não está logado')
-        return
-      }
+  if (!currentUser) {
+    console.error('Usuário não está logado')
+    return
+  }
 
-      // Inicializar mapa
-      map = L.map('map').setView([-22.1740094, -47.3938169], 13)
+  // Inicializar mapa
+  map = L.map('map').setView([-22.1740094, -47.3938169], 13)
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map)
 
-      // Configurar ícone padrão
-      let DefaultIcon = L.icon({
-        iconUrl: icon,
-        shadowUrl: iconShadow,
-        iconSize: [25, 41],
-        iconAnchor: [12, 41]
-      })
-      L.Marker.prototype.options.icon = DefaultIcon
+  let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+  })
+  L.Marker.prototype.options.icon = DefaultIcon
+
+  try {
+    const db = getFirestore()
+
+    // Buscar pets do usuário (parte que já está funcionando)
+    const petsRef = collection(db, 'Pets')
+    const petsQuery = query(
+      petsRef,
+      where('userId', '==', currentUser.uid)
+    )
+
+    const petsSnapshot = await getDocs(petsQuery)
+    console.log('Pets encontrados:', petsSnapshot.size)
+
+    if (petsSnapshot.empty) {
+      console.log('Nenhum pet encontrado para este usuário')
+      noLocationFound.value = true
+      return
+    }
+
+    // Array para armazenar os marcadores
+    const markers = []
+    const bounds = L.latLngBounds()
+
+    // Para cada pet do usuário
+    for (const petDoc of petsSnapshot.docs) {
+      const petData = petDoc.data()
+      console.log('Buscando localização do pet:', petData.nome)
+
+      // Buscar a última localização deste pet
+      const locationsRef = collection(db, 'Localizacoes')
+      const locQuery = query(
+        locationsRef,
+        where('petId', '==', petDoc.id),
+        orderBy('timestamp', 'desc'),
+        limit(1)
+      )
 
       try {
-        const db = getFirestore()
+        const locationSnapshot = await getDocs(locQuery)
 
-        // Buscar o último registro do pet do usuário logado
-        const locationsRef = collection(db, 'Localizacoes')
-        const q = query(
-          locationsRef,
-          where('petID', '==', currentUser.uid), // Assumindo que petID é o ID do usuário
-          orderBy('timestamp', 'desc'),
-          limit(1)
-        )
+        if (!locationSnapshot.empty) {
+          const locationData = locationSnapshot.docs[0].data()
+          console.log(`Localização encontrada para ${petData.nome}:`, locationData)
 
-        const querySnapshot = await getDocs(q)
+          if (locationData.latitude && locationData.longitude) {
+            // Criar marcador para este pet
+            const marker = L.marker([locationData.latitude, locationData.longitude])
+              .addTo(map)
+              .bindPopup(`
+                <b>${petData.nome}</b><br>
+                Última atualização: ${formatTimestamp(locationData.timestamp)}
+              `)
 
-        if (querySnapshot.empty) {
-          console.log('Nenhuma localização encontrada')
-          noLocationFound.value = true
-          return
+            marker.on('click', () => {
+              selectedLocation.value = {
+                ...locationData,
+                nomePet: petData.nome,
+                nomeTutor: petData.nomeTutor || currentUser.displayName,
+                telefone: petData.telefone || 'Não informado'
+              }
+            })
+
+            markers.push(marker)
+            bounds.extend([locationData.latitude, locationData.longitude])
+          }
+        } else {
+          console.log(`Nenhuma localização encontrada para ${petData.nome}`)
         }
-
-        const doc = querySnapshot.docs[0]
-        const data = doc.data()
-        console.log('Localização encontrada:', data)
-
-        // Adicionar marcador ao mapa
-        if (data.latitude && data.longitude) {
-          // Centralizar mapa na localização do pet
-          map.setView([data.latitude, data.longitude], 15)
-
-          const marker = L.marker([data.latitude, data.longitude])
-            .addTo(map)
-            .bindPopup(`
-              <b>${data.nomePet}</b><br>
-              Última atualização: ${formatTimestamp(data.timestamp)}
-            `)
-
-          marker.on('click', () => {
-            selectedLocation.value = data
-          })
-
-          // Abrir popup automaticamente
-          marker.openPopup()
-        }
-
       } catch (error) {
-        console.error('Erro ao carregar dados:', error)
+        console.error(`Erro ao buscar localização do pet ${petData.nome}:`, error)
       }
     }
 
+    // Se encontrou alguma localização
+    if (markers.length > 0) {
+      // Ajustar o zoom para mostrar todos os pets
+      map.fitBounds(bounds, {
+        padding: [50, 50], // padding em pixels
+        maxZoom: 15 // zoom máximo
+      })
+
+      // Se só tem um pet, abrir o popup automaticamente
+      if (markers.length === 1) {
+        markers[0].openPopup()
+      }
+    } else {
+      console.log('Nenhuma localização encontrada para os pets')
+      noLocationFound.value = true
+    }
+
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error)
+    console.error('Detalhes do erro:', {
+      message: error.message,
+      code: error.code
+    })
+  }
+}
     onMounted(async () => {
       await initMap()
     })
