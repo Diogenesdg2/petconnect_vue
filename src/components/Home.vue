@@ -1,24 +1,36 @@
 <template>
   <div class="home-container">
-  <!-- Login Section -->
+    <!-- Login Section -->
     <div class="login-section">
       <div class="login-container">
         <div class="login-form">
+          <div v-if="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
           <input
-            type="text"
-            placeholder="Usuário"
+            type="email"
+            placeholder="Email"
             class="login-input"
+            v-model="email"
+            :disabled="loading"
           >
           <input
             type="password"
             placeholder="Senha"
             class="login-input"
+            v-model="password"
+            :disabled="loading"
           >
-          <button class="login-button">Entrar</button>
+          <button
+            class="login-button"
+            @click="handleLogin"
+            :disabled="loading"
+          >
+            {{ loading ? 'Entrando...' : 'Entrar' }}
+          </button>
         </div>
       </div>
     </div>
-   <!-- Seção Cabeçalho -->
    <section class="hero-section">
      <div class="hero-content">
        <img
@@ -67,8 +79,83 @@
 </template>
 
 <script>
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
 export default {
- name: "PetConnect"
+  name: "PetConnect",
+  setup() {
+    const email = ref('')
+    const password = ref('')
+    const loading = ref(false)
+    const errorMessage = ref('')
+    const router = useRouter()
+    const auth = getAuth()
+
+    const handleLogin = async () => {
+      // Resetar mensagem de erro
+      errorMessage.value = ''
+
+      // Validações básicas
+      if (!email.value || !password.value) {
+        errorMessage.value = 'Por favor, preencha todos os campos'
+        return
+      }
+
+      // Validação básica de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email.value)) {
+        errorMessage.value = 'Por favor, insira um email válido'
+        return
+      }
+
+      try {
+        loading.value = true
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email.value,
+          password.value
+        )
+
+        // Login bem-sucedido
+        console.log('Usuário logado:', userCredential.user)
+
+        // Redirecionar para a página principal (ajuste a rota conforme sua aplicação)
+        router.push('/dashboard')
+
+      } catch (error) {
+        // Tratamento de erros específicos do Firebase
+        switch (error.code) {
+          case 'auth/user-not-found':
+            errorMessage.value = 'Usuário não encontrado'
+            break
+          case 'auth/wrong-password':
+            errorMessage.value = 'Senha incorreta'
+            break
+          case 'auth/invalid-email':
+            errorMessage.value = 'Email inválido'
+            break
+          case 'auth/too-many-requests':
+            errorMessage.value = 'Muitas tentativas. Tente novamente mais tarde'
+            break
+          default:
+            errorMessage.value = 'Erro ao fazer login. Tente novamente'
+            console.error('Erro de login:', error)
+        }
+      } finally {
+        loading.value = false
+      }
+    }
+
+    return {
+      email,
+      password,
+      loading,
+      errorMessage,
+      handleLogin
+    }
+  }
 }
 </script>
 
@@ -99,10 +186,10 @@ export default {
 .login-input {
   width: 200px;
   padding: 0.5rem 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 4px solid #004d40;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: white;
+  color: black;
   font-size: 1rem;
   transition: all 0.3s ease;
 }
@@ -113,7 +200,7 @@ export default {
 
 .login-input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: #004d40;
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -150,6 +237,48 @@ export default {
   .login-button {
     width: 100%;
   }
+  .error-message {
+  background: rgba(48, 1, 1, 0.1);
+  color: #f50808;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  text-align: center;
+  margin-bottom: 1rem;
+  width: 100%;
+  backdrop-filter: blur(5px);
+}
+
+.login-input:disabled,
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+}
+.error-message {
+  background: #154ABC;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  text-align: center;
+  margin-bottom: 1rem;
+  width: 100%;
+  backdrop-filter: blur(5px);
+}
+
+.login-input:disabled,
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .home-container {
  min-height: 100vh;
