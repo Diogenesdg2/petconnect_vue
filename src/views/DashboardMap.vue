@@ -2,8 +2,20 @@
   <div class="dashboard-container">
     <div id="map" ref="mapContainer" class="map-container"></div>
 
+    <!-- Legenda -->
+    <div class="map-legend">
+      <div class="legend-title">Meus Pets</div>
+      <div class="legend-items">
+        <div v-for="pet in petsLegend" :key="pet.nome" class="legend-item">
+          <div class="legend-color" :style="{ backgroundColor: pet.color }"></div>
+          <span class="legend-name">{{ pet.nome }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Popup de informações -->
     <div v-if="selectedLocation" class="location-info">
+      <div class="pet-marker-color" :style="{ backgroundColor: selectedLocation.markerColor }"></div>
       <h3>Informações do Pet</h3>
       <p><strong>Nome do Pet:</strong> {{ selectedLocation.nomePet }}</p>
       <p><strong>Tutor:</strong> {{ selectedLocation.nomeTutor }}</p>
@@ -25,8 +37,6 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs } from 
 import { getAuth } from 'firebase/auth'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import icon from 'leaflet/dist/images/marker-icon.png'
-import iconShadow from 'leaflet/dist/images/marker-shadow.png'
 
 export default {
   name: 'DashboardMap',
@@ -34,7 +44,42 @@ export default {
     const mapContainer = ref(null)
     const selectedLocation = ref(null)
     const noLocationFound = ref(false)
+    const petsLegend = ref([]) // Novo ref para a legenda
     let map = null
+
+    // Lista de cores para os marcadores
+    const markerColors = [
+      '#FF0000', // Vermelho
+      '#0000FF', // Azul
+      '#008000', // Verde
+      '#FFA500', // Laranja
+      '#800080', // Roxo
+      '#FF1493', // Rosa
+      '#00FFFF', // Ciano
+      '#FFD700', // Dourado
+      '#8B4513', // Marrom
+      '#4B0082'  // Índigo
+    ]
+
+    // Função para criar ícone colorido
+    const createColoredIcon = (color) => {
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div style="
+            background-color: ${color};
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+          "></div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
+      })
+    }
 
     const formatTimestamp = (timestamp) => {
       if (!timestamp) return ''
@@ -42,129 +87,136 @@ export default {
       return date.toLocaleString('pt-BR')
     }
 
-  const initMap = async () => {
-  const auth = getAuth()
-  const currentUser = auth.currentUser
+    const initMap = async () => {
+      const auth = getAuth()
+      const currentUser = auth.currentUser
 
-  if (!currentUser) {
-    console.error('Usuário não está logado')
-    return
-  }
+      if (!currentUser) {
+        console.error('Usuário não está logado')
+        return
+      }
 
-  // Inicializar mapa
-  map = L.map('map').setView([-22.1740094, -47.3938169], 13)
-  console.log('Mapa inicializado:', map)
+      map = L.map('map').setView([-22.1740094, -47.3938169], 13)
+      console.log('Mapa inicializado:', map)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map)
-
-  let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-  })
-  L.Marker.prototype.options.icon = DefaultIcon
-
-  try {
-    const db = getFirestore()
-
-    // Buscar pets do usuário (parte que já está funcionando)
-    const petsRef = collection(db, 'Pets')
-    const petsQuery = query(
-      petsRef,
-      where('userId', '==', currentUser.uid)
-    )
-
-    const petsSnapshot = await getDocs(petsQuery)
-    console.log('Pets encontrados:', petsSnapshot.size)
-
-    if (petsSnapshot.empty) {
-      console.log('Nenhum pet encontrado para este usuário')
-      noLocationFound.value = true
-      return
-    }
-
-    // Array para armazenar os marcadores
-    const markers = []
-    const bounds = L.latLngBounds()
-
-    // Para cada pet do usuário
-    for (const petDoc of petsSnapshot.docs) {
-      const petData = petDoc.data()
-      console.log('Buscando localização do pet:', petData.nome)
-
-      // Buscar a última localização deste pet
-      const locationsRef = collection(db, 'Localizacoes')
-      const locQuery = query(
-        locationsRef,
-        where('petId', '==', petDoc.id),
-        orderBy('timestamp', 'desc'),
-        limit(1)
-      )
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map)
 
       try {
-        const locationSnapshot = await getDocs(locQuery)
+        const db = getFirestore()
+        const petsRef = collection(db, 'Pets')
+        const petsQuery = query(
+          petsRef,
+          where('userId', '==', currentUser.uid)
+        )
 
-        if (!locationSnapshot.empty) {
-          const locationData = locationSnapshot.docs[0].data()
-          console.log(`Localização encontrada para ${petData.nome}:`, locationData)
+        const petsSnapshot = await getDocs(petsQuery)
+        console.log('Pets encontrados:', petsSnapshot.size)
 
-          if (locationData.latitude && locationData.longitude) {
-            // Criar marcador para este pet
-            const marker = L.marker([locationData.latitude, locationData.longitude])
-              .addTo(map)
-              .bindPopup(`
-                <b>${petData.nome}</b><br>
-                Última atualização: ${formatTimestamp(locationData.timestamp)}
-              `)
+        if (petsSnapshot.empty) {
+          console.log('Nenhum pet encontrado para este usuário')
+          noLocationFound.value = true
+          return
+        }
 
-            marker.on('click', () => {
-              selectedLocation.value = {
-                ...locationData,
-                nomePet: petData.nome,
-                nomeTutor: petData.nomeTutor || currentUser.displayName,
-                telefone: petData.telefone || 'Não informado'
+        const markers = []
+        const bounds = L.latLngBounds()
+        const legendItems = [] // Array para itens da legenda
+
+        // Para cada pet do usuário
+        for (const [index, petDoc] of petsSnapshot.docs.entries()) {
+          const petData = petDoc.data()
+          const petColor = markerColors[index % markerColors.length]
+
+          // Adicionar à legenda
+          legendItems.push({
+            nome: petData.nome,
+            color: petColor
+          })
+
+          console.log('Buscando localização do pet:', petData.nome)
+          console.log('Adicionado à legenda:', petData.nome, petColor)
+
+          const locationsRef = collection(db, 'Localizacoes')
+          const locQuery = query(
+            locationsRef,
+            where('petId', '==', petDoc.id),
+            orderBy('timestamp', 'desc'),
+            limit(1)
+          )
+
+          try {
+            const locationSnapshot = await getDocs(locQuery)
+
+            if (!locationSnapshot.empty) {
+              const locationData = locationSnapshot.docs[0].data()
+              console.log(`Localização encontrada para ${petData.nome}:`, locationData)
+
+              if (locationData.latitude && locationData.longitude) {
+                const marker = L.marker(
+                  [locationData.latitude, locationData.longitude],
+                  { icon: createColoredIcon(petColor) }
+                )
+                  .addTo(map)
+                  .bindPopup(`
+                    <div style="text-align: center;">
+                      <div style="
+                        width: 12px;
+                        height: 12px;
+                        background-color: ${petColor};
+                        border-radius: 50%;
+                        margin: 0 auto 5px auto;
+                        border: 2px solid white;
+                        box-shadow: 0 0 2px rgba(0,0,0,0.5);
+                      "></div>
+                      <b>${petData.nome}</b><br>
+                      Última atualização: ${formatTimestamp(locationData.timestamp)}
+                    </div>
+                  `)
+
+                marker.on('click', () => {
+                  selectedLocation.value = {
+                    ...locationData,
+                    nomePet: petData.nome,
+                    nomeTutor: petData.nomeTutor || currentUser.displayName,
+                    telefone: petData.telefone || 'Não informado',
+                    markerColor: petColor
+                  }
+                })
+
+                markers.push(marker)
+                bounds.extend([locationData.latitude, locationData.longitude])
               }
-            })
+            } else {
+              console.log(`Nenhuma localização encontrada para ${petData.nome}`)
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar localização do pet ${petData.nome}:`, error)
+          }
+        }
+        console.log('Itens da legenda:', legendItems) // Debug
+        petsLegend.value = [...legendItems]
 
-            markers.push(marker)
-            bounds.extend([locationData.latitude, locationData.longitude])
+        if (markers.length > 0) {
+          map.fitBounds(bounds, {
+            padding: [50, 50],
+            maxZoom: 15
+          })
+
+          if (markers.length === 1) {
+            markers[0].openPopup()
           }
         } else {
-          console.log(`Nenhuma localização encontrada para ${petData.nome}`)
+          console.log('Nenhuma localização encontrada para os pets')
+          noLocationFound.value = true
         }
+
       } catch (error) {
-        console.error(`Erro ao buscar localização do pet ${petData.nome}:`, error)
+        console.error('Erro ao carregar dados:', error)
       }
     }
 
-    // Se encontrou alguma localização
-    if (markers.length > 0) {
-      // Ajustar o zoom para mostrar todos os pets
-      map.fitBounds(bounds, {
-        padding: [50, 50], // padding em pixels
-        maxZoom: 15 // zoom máximo
-      })
-
-      // Se só tem um pet, abrir o popup automaticamente
-      if (markers.length === 1) {
-        markers[0].openPopup()
-      }
-    } else {
-      console.log('Nenhuma localização encontrada para os pets')
-      noLocationFound.value = true
-    }
-
-  } catch (error) {
-    console.error('Erro ao carregar dados:', error)
-    console.error('Detalhes do erro:', {
-      message: error.message,
-      code: error.code
-    })
-  }
-}
     onMounted(async () => {
       await initMap()
     })
@@ -173,7 +225,8 @@ export default {
       mapContainer,
       selectedLocation,
       noLocationFound,
-      formatTimestamp
+      formatTimestamp,
+      petsLegend
     }
   }
 }
@@ -250,23 +303,88 @@ export default {
 }
 
 /* Ajustes para dispositivos móveis */
+/* Ajustes para dispositivos móveis */
 @media (max-width: 768px) {
-  .location-info {
-    top: auto;
-    bottom: 20px;
-    right: 50%;
-    transform: translateX(50%);
-    width: 90%;
-    max-width: 400px;
+  .map-legend {
+    top: 60px;
+    left: 10px;
+    max-width: 150px;
   }
 }
 
-/* Ajustes para telas muito pequenas */
-@media (max-height: 500px) {
-  .location-info {
-    max-height: 80vh;
-    overflow-y: auto;
+/* Para telas muito pequenas */
+@media (max-width: 480px) {
+  .map-legend {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 200px;
   }
+}
+.pet-marker-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 0 auto 10px auto;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+.location-info {
+  text-align: center;
+}
+
+/* Adicione estes estilos junto com os outros dentro do style scoped */
+.map-legend {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  background: white;
+  padding: 12px; /* Aumentado o padding */
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1500;
+  max-width: 220px; /* Aumentado um pouco */
+  min-width: 170px; /* Aumentado um pouco */
+  background-color: rgba(116, 113, 113, 0.95);
+}
+
+/* Resto dos estilos da legenda */
+.legend-title {
+  font-weight: bold;
+  font-size: 1.2em; /* Aumentado o tamanho */
+  margin-bottom: 12px; /* Aumentado o espaçamento */
+  text-align: center;
+  color: #333;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Aumentado o espaçamento entre itens */
+}
+
+.legend-color {
+  width: 18px; /* Aumentado um pouco */
+  height: 18px; /* Aumentado um pouco */
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.legend-name {
+  font-size: 1.1em; /* Aumentado o tamanho */
+  color: #444;
+  font-weight: bold; /* Mudado para bold */
 }
 </style>
 
@@ -285,4 +403,26 @@ export default {
 .leaflet-control-container {
   z-index: 1000;
 }
+.custom-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-marker div {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 </style>
