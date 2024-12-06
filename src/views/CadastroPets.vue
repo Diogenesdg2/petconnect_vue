@@ -323,10 +323,10 @@ export default {
 
 .logout-btn {
   background: none;
+  border-radius: 20px;
   border: 1px solid white;
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 5px;
   cursor: pointer;
   transition: all 0.3s;
 }
@@ -456,6 +456,7 @@ input:focus, select:focus {
 
 .cancel-btn {
   background: none;
+  border-radius: 20px;
   border: 1px solid #666;
   color: #666;
 }
@@ -466,6 +467,7 @@ input:focus, select:focus {
 
 .submit-btn {
   background: #154ABC;
+  border-radius: 20px;
   border: none;
   color: white;
 }
