@@ -386,13 +386,19 @@ const sharePet = async (pet) => {
   }
 
   try {
+    const petUrl = `https://petconnect.info/pet/${pet.id}`
+
     await navigator.share({
       title: `Pet: ${pet.nome}`,
       text: `Confira meu pet ${pet.nome}!\nRaça: ${pet.raca}\nCor: ${pet.cor}\nGênero: ${pet.genero}\nPorte: ${pet.porte}`,
-      url: window.location.href
+      url: petUrl
     })
   } catch (error) {
     console.error('Erro ao compartilhar:', error)
+    // Opcional: mostrar mensagem de erro para o usuário
+    if (error.name !== 'AbortError') { // Ignora erro quando usuário cancela compartilhamento
+      alert('Erro ao compartilhar. Tente novamente.')
+    }
   }
 }
 
