@@ -303,11 +303,10 @@ export default {
 }
 
 /* Ajustes para dispositivos móveis */
-/* Ajustes para dispositivos móveis */
 @media (max-width: 768px) {
   .map-legend {
     top: 60px;
-    left: 10px;
+    left: 60px;
     max-width: 150px;
   }
 }
@@ -315,11 +314,35 @@ export default {
 /* Para telas muito pequenas */
 @media (max-width: 480px) {
   .map-legend {
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 200px;
+    top: 50px;
+    left: 8px;
+    padding: 8px;
+    max-width: 150px;
+    min-width: 120px;
+  }
+
+  .legend-title {
+    font-size: 0.9em;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+
+  .legend-items {
+    gap: 6px;
+  }
+
+  .legend-item {
+    gap: 6px;
+  }
+
+  .legend-name {
+    font-size: 0.85em;
+  }
+
+  .legend-color {
+    width: 14px;
+    height: 14px;
+    border-width: 1.5px;
   }
 }
 .pet-marker-color {
@@ -341,50 +364,37 @@ export default {
   top: 80px;
   left: 20px;
   background: white;
-  padding: 12px; /* Aumentado o padding */
+  padding: 12px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1500;
-  max-width: 220px; /* Aumentado um pouco */
-  min-width: 170px; /* Aumentado um pouco */
-  background-color: rgba(116, 113, 113, 0.95);
+  max-width: 220px;
+  min-width: 170px;
+  background-color: rgba(92, 89, 89, 0.95);
 }
 
-/* Resto dos estilos da legenda */
 .legend-title {
   font-weight: bold;
-  font-size: 1.2em; /* Aumentado o tamanho */
-  margin-bottom: 12px; /* Aumentado o espaçamento */
+  font-size: 1.2em;
+  margin-bottom: 12px;
   text-align: center;
   color: #333;
   padding-bottom: 8px;
   border-bottom: 1px solid #eee;
 }
 
-.legend-items {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.legend-items {
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* Aumentado o espaçamento entre itens */
+.legend-name {
+  font-size: 1.1em;
+  color: #444;
+  font-weight: bold;
 }
 
 .legend-color {
-  width: 18px; /* Aumentado um pouco */
-  height: 18px; /* Aumentado um pouco */
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: 2px solid white;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-}
-
-.legend-name {
-  font-size: 1.1em; /* Aumentado o tamanho */
-  color: #444;
-  font-weight: bold; /* Mudado para bold */
 }
 </style>
 
