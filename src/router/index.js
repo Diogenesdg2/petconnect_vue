@@ -27,6 +27,18 @@ const routes = [
     name: 'Dashboard',
     component: DashboardMap,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/cadastro-pets',
+    name: 'CadastroPets',
+    component: () => import('../views/CadastroPets.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/meus-pets',
+    name: 'MeusPets',
+    component: () => import('../views/MeusPets.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -39,9 +51,12 @@ import { getAuth } from 'firebase/auth'
 router.beforeEach((to, from, next) => {
   const auth = getAuth()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const isAuthenticated = auth.currentUser
 
-  if (requiresAuth && !auth.currentUser) {
+  if (requiresAuth && !isAuthenticated) {
     next('/')
+  } else if (isAuthenticated && to.path === '/') {
+    next('/meus-pets')
   } else {
     next()
   }

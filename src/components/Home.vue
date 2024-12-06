@@ -1,36 +1,140 @@
 <template>
-  <div class="home-container">
-    <!-- Login Section -->
-    <div class="login-section">
-      <div class="login-container">
-        <div class="login-form">
-          <div v-if="errorMessage" class="error-message">
-            {{ errorMessage }}
-          </div>
-          <input
-            type="email"
-            placeholder="Email"
-            class="login-input"
-            v-model="email"
-            :disabled="loading"
-          >
-          <input
-            type="password"
-            placeholder="Senha"
-            class="login-input"
-            v-model="password"
-            :disabled="loading"
-          >
-          <button
-            class="login-button"
-            @click="handleLogin"
-            :disabled="loading"
-          >
-            {{ loading ? 'Entrando...' : 'Entrar' }}
-          </button>
-        </div>
-      </div>
+ <!-- Modificar a div login-form -->
+<div class="login-form">
+  <div v-if="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+  <input
+    type="email"
+    placeholder="Email"
+    class="login-input"
+    v-model="email"
+    :disabled="loading"
+  >
+  <input
+    type="password"
+    placeholder="Senha"
+    class="login-input"
+    v-model="password"
+    :disabled="loading"
+  >
+  <button
+    class="login-button"
+    @click="handleLogin"
+    :disabled="loading"
+  >
+    {{ loading ? 'Entrando...' : 'Entrar' }}
+  </button>
+  <button
+    class="register-button"
+    @click="showRegisterModal = true"
+    :disabled="loading"
+  >
+    Cadastrar
+  </button>
+</div>
+
+<!-- Adicionar o modal de cadastro -->
+<div v-if="showRegisterModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Cadastro de Usuário</h2>
+      <button class="close-button" @click="showRegisterModal = false">&times;</button>
     </div>
+
+    <form @submit.prevent="handleRegister" class="register-form">
+      <!-- Nome -->
+      <div class="form-group">
+        <input
+          type="text"
+          v-model="registerForm.nome"
+          placeholder="Nome completo"
+          required
+          class="register-input"
+        >
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <input
+          type="email"
+          v-model="registerForm.email"
+          placeholder="Email"
+          required
+          class="register-input"
+        >
+      </div>
+
+      <!-- Senha -->
+      <div class="form-group">
+        <input
+          type="password"
+          v-model="registerForm.password"
+          placeholder="Senha"
+          required
+          class="register-input"
+        >
+      </div>
+
+      <!-- Data de Nascimento -->
+      <div class="form-group">
+        <input
+          type="date"
+          v-model="registerForm.dataNascimento"
+          required
+          class="register-input"
+        >
+      </div>
+
+      <!-- Telefone -->
+      <div class="form-group">
+        <input
+          type="tel"
+          v-model="registerForm.telefone"
+          placeholder="Telefone"
+          required
+          class="register-input"
+          maxlength="15"
+        >
+      </div>
+
+      <!-- Gênero -->
+      <div class="form-group">
+        <select
+          v-model="registerForm.genero"
+          required
+          class="register-input"
+        >
+          <option value="">Selecione o gênero</option>
+          <option value="Homem">Homem</option>
+          <option value="Mulher">Mulher</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+
+      <!-- Foto -->
+      <div class="form-group">
+        <label class="file-input-label">
+          <span>{{ registerForm.foto ? 'Foto selecionada' : 'Escolher foto' }}</span>
+          <input
+            type="file"
+            @change="handleFileUpload"
+            accept="image/*"
+            class="file-input"
+          >
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        class="register-submit-button"
+        :disabled="isRegistering"
+      >
+        {{ isRegistering ? 'Cadastrando...' : 'Cadastrar' }}
+      </button>
+    </form>
+  </div>
+</div>
    <section class="hero-section">
      <div class="hero-content">
        <img
@@ -75,17 +179,19 @@
        </div>
      </div>
    </section>  <!-- Final dos cards-->
- </div>
-</template>
 
+</template>
 <script>
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import { ref } from 'vue'
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { getFirestore, collection, addDoc } from 'firebase/firestore'
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
   name: "PetConnect",
   setup() {
+    // Refs existentes...
     const email = ref('')
     const password = ref('')
     const loading = ref(false)
@@ -93,17 +199,51 @@ export default {
     const router = useRouter()
     const auth = getAuth()
 
+    // Refs para cadastro...
+    const showRegisterModal = ref(false)
+    const isRegistering = ref(false)
+    const registerError = ref('')
+    const registerForm = ref({
+      nome: '',
+      email: '',
+      password: '',
+      dataNascimento: '',
+      telefone: '',
+      genero: '',
+      foto: ''
+    })
+
+    // Função para formatar telefone
+    const formatPhoneNumber = (value) => {
+      if (!value) return ''
+
+      value = value.replace(/\D/g, '')
+      if (value.length > 11) value = value.slice(0, 11)
+
+      if (value.length > 7) {
+        return value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '(\$1) \$2-\$3')
+      } else if (value.length > 2) {
+        return value.replace(/^(\d{2})(\d{0,5})/, '(\$1) \$2')
+      }
+      return value
+    }
+
+    // Watch para formatar telefone automaticamente
+    watch(() => registerForm.value.telefone, (newValue) => {
+      if (newValue) {
+        registerForm.value.telefone = formatPhoneNumber(newValue)
+      }
+    })
+
+    // Função de login...
     const handleLogin = async () => {
-      // Resetar mensagem de erro
       errorMessage.value = ''
 
-      // Validações básicas
       if (!email.value || !password.value) {
         errorMessage.value = 'Por favor, preencha todos os campos'
         return
       }
 
-      // Validação básica de email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(email.value)) {
         errorMessage.value = 'Por favor, insira um email válido'
@@ -118,14 +258,10 @@ export default {
           password.value
         )
 
-        // Login bem-sucedido
         console.log('Usuário logado:', userCredential.user)
-
-        // Redirecionar para a página principal (ajuste a rota conforme sua aplicação)
-        router.push('/dashboard')
+        router.push('/meus-pets')
 
       } catch (error) {
-        // Tratamento de erros específicos do Firebase
         switch (error.code) {
           case 'auth/user-not-found':
             errorMessage.value = 'Usuário não encontrado'
@@ -148,18 +284,139 @@ export default {
       }
     }
 
+    // Upload de arquivo...
+    const handleFileUpload = async (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        try {
+          const storage = getStorage()
+          const fileRef = storageRef(storage, `usuarios/${Date.now()}-${file.name}`)
+          await uploadBytes(fileRef, file)
+          const downloadURL = await getDownloadURL(fileRef)
+          registerForm.value.foto = downloadURL
+        } catch (error) {
+          console.error('Erro ao fazer upload da imagem:', error)
+          registerError.value = 'Erro ao fazer upload da imagem. Tente novamente.'
+        }
+      }
+    }
+
+    // Validação do formulário...
+    const validateRegisterForm = () => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+      if (!registerForm.value.nome) {
+        registerError.value = 'Nome é obrigatório'
+        return false
+      }
+      if (!registerForm.value.email || !emailRegex.test(registerForm.value.email)) {
+        registerError.value = 'Email inválido'
+        return false
+      }
+      if (!registerForm.value.password || registerForm.value.password.length < 6) {
+        registerError.value = 'Senha deve ter no mínimo 6 caracteres'
+        return false
+      }
+      if (!registerForm.value.dataNascimento) {
+        registerError.value = 'Data de nascimento é obrigatória'
+        return false
+      }
+      if (!registerForm.value.telefone) {
+        registerError.value = 'Telefone é obrigatório'
+        return false
+      }
+      if (!registerForm.value.genero) {
+        registerError.value = 'Gênero é obrigatório'
+        return false
+      }
+      return true
+    }
+
+    // Função de registro...
+    const handleRegister = async () => {
+      registerError.value = ''
+
+      if (!validateRegisterForm()) {
+        return
+      }
+
+      try {
+        isRegistering.value = true
+
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          registerForm.value.email,
+          registerForm.value.password
+        )
+
+        const db = getFirestore()
+        await addDoc(collection(db, 'Usuarios'), {
+          uid: userCredential.user.uid,
+          nome: registerForm.value.nome,
+          email: registerForm.value.email,
+          dataNascimento: registerForm.value.dataNascimento,
+          telefone: registerForm.value.telefone,
+          genero: registerForm.value.genero,
+          foto: registerForm.value.foto,
+          dataCadastro: new Date().toISOString()
+        })
+
+        // Limpar formulário
+        registerForm.value = {
+          nome: '',
+          email: '',
+          password: '',
+          dataNascimento: '',
+          telefone: '',
+          genero: '',
+          foto: ''
+        }
+        showRegisterModal.value = false
+
+        router.push('/cadastro-pets')
+
+      } catch (error) {
+        console.error('Erro no cadastro:', error)
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            registerError.value = 'Este email já está em uso'
+            break
+          case 'auth/invalid-email':
+            registerError.value = 'Email inválido'
+            break
+          case 'auth/operation-not-allowed':
+            registerError.value = 'Operação não permitida'
+            break
+          case 'auth/weak-password':
+            registerError.value = 'Senha muito fraca'
+            break
+          default:
+            registerError.value = 'Erro ao realizar cadastro. Tente novamente.'
+        }
+      } finally {
+        isRegistering.value = false
+      }
+    }
+
     return {
+      // Estados
       email,
       password,
       loading,
       errorMessage,
-      handleLogin
+      showRegisterModal,
+      registerForm,
+      registerError,
+      isRegistering,
+
+      // Métodos
+      handleLogin,
+      handleRegister,
+      handleFileUpload
     }
   }
 }
 </script>
-
-
 <style scoped>
 
 .login-section {
@@ -531,5 +788,147 @@ export default {
  to {
    opacity: 1;
  }
+}
+/* Adicionar ao seu <style scoped> existente */
+
+.register-button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  background: #00695c;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.register-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: #004d40;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+  color: #154ABC;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  position: relative;
+}
+
+.register-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid #154ABC;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.register-input:focus {
+  outline: none;
+  border-color: #004d40;
+  box-shadow: 0 0 0 2px rgba(0, 77, 64, 0.1);
+}
+
+.file-input-label {
+  display: block;
+  padding: 0.8rem 1rem;
+  background: #f0f0f0;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.file-input-label:hover {
+  background: #e0e0e0;
+}
+
+.file-input {
+  display: none;
+}
+
+.register-submit-button {
+  background: #154ABC;
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.register-submit-button:hover {
+  background: #004d40;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
 }
 </style>
