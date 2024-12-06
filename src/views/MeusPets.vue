@@ -140,64 +140,78 @@
           >
         </label>
       </div>
-
       <div class="form-fields">
-        <div class="form-group">
-          <label>Nome</label>
-          <input
-            type="text"
-            v-model="editingPet.nome"
-            required
-          >
-        </div>
-
-        <div class="form-group">
-          <label>Raça</label>
-          <input
-            type="text"
-            v-model="editingPet.raca"
-            required
-          >
-        </div>
-
-        <div class="form-group">
-          <label>Cor</label>
-          <input
-            type="text"
-            v-model="editingPet.cor"
-            required
-          >
-        </div>
-
-        <div class="form-group">
-          <label>Gênero</label>
-          <select v-model="editingPet.genero" required>
-            <option value="Macho">Macho</option>
-            <option value="Fêmea">Fêmea</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Porte</label>
-          <select v-model="editingPet.porte" required>
-            <option value="Pequeno">Pequeno</option>
-            <option value="Médio">Médio</option>
-            <option value="Grande">Grande</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input
+          type="text"
+          v-model="editingPet.nome"
+          required
+          placeholder="Nome do pet"
+        >
       </div>
-
-      <div class="form-actions">
-        <button type="button" @click="closeEditModal" class="cancel-btn">
-          Cancelar
-        </button>
-        <button type="submit" class="save-btn" :disabled="updating">
-          {{ updating ? 'Salvando...' : 'Salvar Alterações' }}
-        </button>
+      <br>
+      <div class="form-group">
+        <label>Raça</label>
+        <input
+          type="text"
+          v-model="editingPet.raca"
+          required
+          placeholder="Raça do pet"
+        >
       </div>
-    </form>
+      <br>
+      <div class="form-group">
+        <label>Cor</label>
+        <input
+          type="text"
+          v-model="editingPet.cor"
+          required
+          placeholder="Cor do pet"
+        >
+      </div>
+      <br>
+      <div class="form-group">
+        <label>Gênero</label>
+        <select v-model="editingPet.genero" required>
+          <option value="">Selecione o gênero</option>
+          <option value="Macho">Macho</option>
+          <option value="Fêmea">Fêmea</option>
+        </select>
+      </div>
+      <br>
+      <div class="form-group">
+        <label>Porte</label>
+        <select v-model="editingPet.porte" required>
+          <option value="">Selecione o porte</option>
+          <option value="Pequeno">Pequeno</option>
+          <option value="Médio">Médio</option>
+          <option value="Grande">Grande</option>
+        </select>
+      </div>
+    </div>
+    <br>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            @click="closeEditModal"
+            class="cancel-btn"
+            :disabled="updating"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="save-btn"
+            :disabled="updating"
+          >
+            {{ updating ? 'Salvando...' : 'Salvar Alterações' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
 <!-- Modal de Confirmação de Exclusão -->
         <div v-if="showDeleteModal" class="modal-overlay">
@@ -295,12 +309,15 @@ const updatePet = async () => {
 
   try {
     updating.value = true
+    updateError.value = null
 
     const storage = getStorage()
     const petRef = doc(db, 'Pets', editingPet.value.id)
     let updateData = { ...editingPet.value }
 
+    // Se houver nova imagem, fazer upload
     if (newImage.value) {
+      // Deletar imagem antiga se existir
       if (editingPet.value.imageUrl) {
         try {
           const oldImageRef = storageRef(storage, editingPet.value.imageUrl)
@@ -310,25 +327,34 @@ const updatePet = async () => {
         }
       }
 
+      // Upload da nova imagem
       const imageRef = storageRef(storage, `pets/${auth.currentUser.uid}/${Date.now()}_${newImage.value.name}`)
       await uploadBytes(imageRef, newImage.value)
       const imageUrl = await getDownloadURL(imageRef)
       updateData.imageUrl = imageUrl
     }
 
+    // Remover campos desnecessários
     delete updateData.previewUrl
 
+    // Atualizar no Firestore
     await updateDoc(petRef, updateData)
 
+    // Atualizar lista local
     const index = pets.value.findIndex(p => p.id === editingPet.value.id)
     if (index !== -1) {
       pets.value[index] = { ...updateData }
     }
 
+    // Mostrar mensagem de sucesso
+    alert('Pet atualizado com sucesso!')
+
+    // Fechar modal
     closeEditModal()
 
   } catch (error) {
     console.error('Erro ao atualizar pet:', error)
+    updateError.value = 'Erro ao salvar as alterações. Tente novamente.'
     alert('Erro ao salvar as alterações. Tente novamente.')
   } finally {
     updating.value = false
@@ -510,9 +536,82 @@ const sharePet = async (pet) => {
 </script>
 
 <style scoped>
+
+/* Adicione ao seu <style scoped> existente */
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.cancel-btn {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  background: #4a76d3;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #154ABC;
+}
+
+.save-btn {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  background: #4a76d3;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #154ABC;
+}
+
+.save-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Adicione uma animação de loading para feedback visual */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.updating {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.updating::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
 .action-btn {
   padding: 0.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
@@ -523,22 +622,27 @@ const sharePet = async (pet) => {
 }
 
 .edit-btn {
+  border-radius: 20px;
   background: #FFA000;
 }
 
 .edit-btn:hover {
+  border-radius: 20px;
   background: #FF8F00;
 }
 
 .delete-btn {
+  border-radius: 20px;
   background: #D32F2F;
 }
 
 .delete-btn:hover {
+  border-radius: 20px;
   background: #C62828;
 }
 
 .share-btn {
+  border-radius: 20px;
   background: #7B1FA2;
 }
 
@@ -571,40 +675,58 @@ const sharePet = async (pet) => {
   bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem 1rem;
+  background: #4a76d3; /* Cor azul semitransparente */
+  color: white; /* Texto branco */
+  padding: 0.75rem 1.5rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500; /* Texto um pouco mais bold */
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.8); /* Borda branca */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra suave */
 }
 
 .image-upload-btn:hover {
-  background: white;
+  background: rgba(21, 74, 188, 1); /* Azul sólido no hover */
+  transform: translateX(-50%) scale(1.05); /* Pequeno efeito de zoom */
+}
+
+/* Estilo para o input file (mantém escondido) */
+.image-upload-btn input[type="file"] {
+  display: none;
 }
 
 .form-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column; /* Campos em coluna */
+  gap: 1rem; /* Espaçamento entre os campos */
 }
-
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.5rem; /* Espaçamento entre label e input */
 }
 
 .form-group label {
   font-weight: 500;
-  color: #333;
+  color: #1a1a1a;
 }
 
 .form-group input,
 .form-group select {
-  padding: 0.5rem;
+  padding: 0.75rem; /* Aumentei um pouco o padding para melhor visibilidade */
   border: 1px solid #ddd;
   border-radius: 5px;
   transition: border-color 0.3s;
+  color: #000000;
+  background-color: #ffffff;
+  font-size: 1rem;
+  width: 100%; /* Garante que o input ocupe toda a largura */
+}
+
+.form-group input::placeholder {
+  color: #666666;
 }
 
 .form-group input:focus,
@@ -612,6 +734,34 @@ const sharePet = async (pet) => {
   border-color: #154ABC;
   outline: none;
 }
+
+.form-group select option {
+  color: #000000;
+  background-color: #ffffff;
+}
+/* Responsividade */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 0.5rem;
+  }
+}
+
+/* Ajuste do footer do modal */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
 
 .warning-text {
   color: #D32F2F;
@@ -686,6 +836,7 @@ const sharePet = async (pet) => {
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
+  border-radius: 20px;
   transition: all 0.3s;
 }
 
@@ -783,9 +934,9 @@ const sharePet = async (pet) => {
 .qr-btn {
   background: #4CAF50;
   border: none;
+  border-radius: 20px;
   color: white;
   padding: 0.75rem 1.5rem;
-  border-radius: 5px;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
@@ -815,9 +966,10 @@ const sharePet = async (pet) => {
   border-radius: 15px;
   padding: 2rem;
   max-width: 90%;
-  width: 400px;
+  width: 500px; /* Largura fixa mais adequada para formulário em coluna */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
+
 
 .modal-header {
   display: flex;
@@ -834,6 +986,7 @@ const sharePet = async (pet) => {
 .close-btn {
   background: none;
   border: none;
+  border-radius: 20px;
   font-size: 1.5rem;
   cursor: pointer;
   color: #666;
@@ -867,6 +1020,7 @@ const sharePet = async (pet) => {
   background: #154ABC;
   color: white;
   border: none;
+  border-radius: 20px;
   padding: 0.75rem 1.5rem;
   border-radius: 5px;
   cursor: pointer;
