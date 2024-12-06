@@ -370,7 +370,7 @@ export default {
   z-index: 1500;
   max-width: 220px;
   min-width: 170px;
-  background-color: rgba(92, 89, 89, 0.95);
+  background-color: rgba(196, 214, 226, 0.95);
 }
 
 .legend-title {
@@ -385,8 +385,8 @@ export default {
 
 .legend-name {
   font-size: 1.1em;
-  color: #444;
-  font-weight: bold;
+  color: black;
+
 }
 
 .legend-color {
