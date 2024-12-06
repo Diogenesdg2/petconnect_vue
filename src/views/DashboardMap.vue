@@ -42,7 +42,7 @@ export default {
       return date.toLocaleString('pt-BR')
     }
 
-    const initMap = async () => {
+  const initMap = async () => {
   const auth = getAuth()
   const currentUser = auth.currentUser
 
@@ -53,6 +53,7 @@ export default {
 
   // Inicializar mapa
   map = L.map('map').setView([-22.1740094, -47.3938169], 13)
+  console.log('Mapa inicializado:', map)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -178,17 +179,34 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+/* Note o "scoped" adicionado aqui em cima */
+
 .dashboard-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100vh;
-  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-container {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100% !important;
+  height: 100% !important;
   z-index: 1;
+}
+#map {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .location-info {
@@ -231,6 +249,29 @@ export default {
   background: #0d3285;
 }
 
+/* Ajustes para dispositivos móveis */
+@media (max-width: 768px) {
+  .location-info {
+    top: auto;
+    bottom: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    width: 90%;
+    max-width: 400px;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-height: 500px) {
+  .location-info {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+</style>
+
+<!-- Estilos não-scoped apenas para classes do Leaflet -->
+<style>
 .leaflet-popup-content-wrapper {
   border-radius: 8px;
   padding: 5px;
@@ -238,5 +279,10 @@ export default {
 
 .leaflet-popup-content {
   margin: 8px;
+  min-width: 200px;
+}
+
+.leaflet-control-container {
+  z-index: 1000;
 }
 </style>
