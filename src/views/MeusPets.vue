@@ -68,8 +68,17 @@
               <span class="detail-label">Porte:</span> {{ pet.porte }}
             </p>
             <div class="pet-actions">
-              <button @click="generateQrCode(pet)" class="qr-btn">
+              <button @click="generateQrCode(pet)" class="action-btn qr-btn">
                 <span class="icon">📱</span> QR Code
+              </button>
+              <button @click="openEditModal(pet)" class="action-btn edit-btn">
+                <span class="icon">✏️</span> Editar
+              </button>
+              <button @click="confirmDelete(pet)" class="action-btn delete-btn">
+                <span class="icon">🗑️</span> Excluir
+              </button>
+              <button @click="sharePet(pet)" class="action-btn share-btn">
+                <span class="icon">📤</span> Compartilhar
               </button>
             </div>
           </div>
@@ -107,6 +116,110 @@
           </div>
         </div>
       </div>
+        <!-- Modal de Edição -->
+<div v-if="showEditModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Editar Pet</h2>
+      <button @click="closeEditModal" class="close-btn">&times;</button>
+    </div>
+    <form @submit.prevent="updatePet" class="edit-form">
+      <div class="form-image">
+        <img
+          :src="editingPet?.previewUrl || editingPet?.imageUrl || '/placeholder-pet.jpg'"
+          alt="Preview"
+          class="preview-image"
+        >
+        <label class="image-upload-btn">
+          Trocar Imagem
+          <input
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleImageChange"
+          >
+        </label>
+      </div>
+
+      <div class="form-fields">
+        <div class="form-group">
+          <label>Nome</label>
+          <input
+            type="text"
+            v-model="editingPet.nome"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Raça</label>
+          <input
+            type="text"
+            v-model="editingPet.raca"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Cor</label>
+          <input
+            type="text"
+            v-model="editingPet.cor"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Gênero</label>
+          <select v-model="editingPet.genero" required>
+            <option value="Macho">Macho</option>
+            <option value="Fêmea">Fêmea</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Porte</label>
+          <select v-model="editingPet.porte" required>
+            <option value="Pequeno">Pequeno</option>
+            <option value="Médio">Médio</option>
+            <option value="Grande">Grande</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" @click="closeEditModal" class="cancel-btn">
+          Cancelar
+        </button>
+        <button type="submit" class="save-btn" :disabled="updating">
+          {{ updating ? 'Salvando...' : 'Salvar Alterações' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+        <div v-if="showDeleteModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Confirmar Exclusão</h2>
+              <button @click="cancelDelete" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p>Tem certeza que deseja excluir o pet "{{ petToDelete?.nome }}"?</p>
+              <p class="warning-text">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+              <button @click="cancelDelete" class="cancel-btn">
+                Cancelar
+              </button>
+              <button @click="deletePet" class="delete-btn" :disabled="deleting">
+                {{ deleting ? 'Excluindo...' : 'Confirmar Exclusão' }}
+              </button>
+            </div>
+          </div>
+        </div>
     </main>
   </div>
 </template>
@@ -114,7 +227,8 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { getAuth, signOut } from 'firebase/auth'
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage'
 import { useRouter } from 'vue-router'
 import QrcodeVue from 'qrcode.vue'
 
@@ -127,12 +241,160 @@ export default {
     const router = useRouter()
     const auth = getAuth()
     const db = getFirestore()
-
     const pets = ref([])
     const loading = ref(true)
     const error = ref(null)
     const showQrModal = ref(false)
     const qrCodeData = ref('')
+    const showEditModal = ref(false)
+    const showDeleteModal = ref(false)
+    const editingPet = ref(null)
+    const petToDelete = ref(null)
+    const updating = ref(false)
+    const deleting = ref(false)
+    const updateError = ref(null)
+    const newImage = ref(null)
+
+    const openEditModal = (pet) => {
+  editingPet.value = { ...pet }
+  showEditModal.value = true
+}
+
+const closeEditModal = () => {
+  showEditModal.value = false
+  editingPet.value = null
+  newImage.value = null
+  updateError.value = null
+}
+
+const handleImageChange = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (!file.type.includes('image/')) {
+    alert('Por favor, selecione apenas arquivos de imagem.')
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('A imagem deve ter no máximo 5MB.')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    editingPet.value.previewUrl = e.target.result
+  }
+  reader.readAsDataURL(file)
+
+  newImage.value = file
+}
+
+const updatePet = async () => {
+  if (!editingPet.value) return
+
+  try {
+    updating.value = true
+
+    const storage = getStorage()
+    const petRef = doc(db, 'Pets', editingPet.value.id)
+    let updateData = { ...editingPet.value }
+
+    if (newImage.value) {
+      if (editingPet.value.imageUrl) {
+        try {
+          const oldImageRef = storageRef(storage, editingPet.value.imageUrl)
+          await deleteObject(oldImageRef)
+        } catch (error) {
+          console.error('Erro ao deletar imagem antiga:', error)
+        }
+      }
+
+      const imageRef = storageRef(storage, `pets/${auth.currentUser.uid}/${Date.now()}_${newImage.value.name}`)
+      await uploadBytes(imageRef, newImage.value)
+      const imageUrl = await getDownloadURL(imageRef)
+      updateData.imageUrl = imageUrl
+    }
+
+    delete updateData.previewUrl
+
+    await updateDoc(petRef, updateData)
+
+    const index = pets.value.findIndex(p => p.id === editingPet.value.id)
+    if (index !== -1) {
+      pets.value[index] = { ...updateData }
+    }
+
+    closeEditModal()
+
+  } catch (error) {
+    console.error('Erro ao atualizar pet:', error)
+    alert('Erro ao salvar as alterações. Tente novamente.')
+  } finally {
+    updating.value = false
+  }
+}
+
+const confirmDelete = (pet) => {
+  petToDelete.value = pet
+  showDeleteModal.value = true
+}
+
+const cancelDelete = () => {
+  showDeleteModal.value = false
+  petToDelete.value = null
+}
+
+const deletePet = async () => {
+  if (!petToDelete.value) return
+
+  try {
+    deleting.value = true
+
+    // Deletar imagem se existir
+    if (petToDelete.value.imageUrl) {
+      const storage = getStorage()
+      try {
+        const imageRef = storageRef(storage, petToDelete.value.imageUrl)
+        await deleteObject(imageRef)
+      } catch (error) {
+        console.error('Erro ao deletar imagem:', error)
+      }
+    }
+
+    // Deletar documento
+    await deleteDoc(doc(db, 'Pets', petToDelete.value.id))
+
+    // Atualizar lista local
+    pets.value = pets.value.filter(p => p.id !== petToDelete.value.id)
+
+    // Fechar modal
+    cancelDelete()
+
+  } catch (error) {
+    console.error('Erro ao excluir pet:', error)
+    alert('Erro ao excluir o pet. Tente novamente.')
+  } finally {
+    deleting.value = false
+  }
+}
+
+const sharePet = async (pet) => {
+  if (!navigator.share) {
+    alert('Seu navegador não suporta compartilhamento.')
+    return
+  }
+
+  try {
+    await navigator.share({
+      title: `Pet: ${pet.nome}`,
+      text: `Confira meu pet ${pet.nome}!\nRaça: ${pet.raca}\nCor: ${pet.cor}\nGênero: ${pet.genero}\nPorte: ${pet.porte}`,
+      url: window.location.href
+    })
+  } catch (error) {
+    console.error('Erro ao compartilhar:', error)
+  }
+}
 
     const fetchPets = async () => {
   try {
@@ -221,13 +483,153 @@ export default {
       showQrModal,
       qrCodeData,
       generateQrCode,
-      handleLogout
+      handleLogout,
+      showEditModal,
+      showDeleteModal,
+      editingPet,
+      petToDelete,
+      updating,
+      deleting,
+      openEditModal,
+      closeEditModal,
+      handleImageChange,
+      updatePet,
+      confirmDelete,
+      cancelDelete,
+      deletePet,
+      sharePet
     }
   }
 }
 </script>
 
 <style scoped>
+.action-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  color: white;
+}
+
+.edit-btn {
+  background: #FFA000;
+}
+
+.edit-btn:hover {
+  background: #FF8F00;
+}
+
+.delete-btn {
+  background: #D32F2F;
+}
+
+.delete-btn:hover {
+  background: #C62828;
+}
+
+.share-btn {
+  background: #7B1FA2;
+}
+
+.share-btn:hover {
+  background: #6A1B9A;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-upload-btn {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.image-upload-btn:hover {
+  background: white;
+}
+
+.form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #154ABC;
+  outline: none;
+}
+
+.warning-text {
+  color: #D32F2F;
+  margin-top: 0.5rem;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .form-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .pet-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+}
+
 .app-container {
   min-height: 100vh;
   background-color: #f5f5f5;
