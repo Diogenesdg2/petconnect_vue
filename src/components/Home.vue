@@ -43,6 +43,9 @@
     </div>
 
     <form @submit.prevent="handleRegister" class="register-form">
+      <div v-if="successMessage" class="success-message">
+          {{ successMessage }}
+      </div>
       <div v-if="registerError" class="error-message">
          {{ registerError }}
       </div>
@@ -134,7 +137,8 @@
         class="register-submit-button"
         :disabled="isRegistering"
       >
-        {{ isRegistering ? 'Cadastrando...' : 'Cadastrar' }}
+        <span v-if="isRegistering" class="spinner"></span>
+        <span>{{ isRegistering ? 'Cadastrando...' : 'Cadastrar' }}</span>
       </button>
     </form>
   </div>
@@ -402,6 +406,14 @@ const closeRegisterModal = () => {
         foto: registerForm.value.foto,
         dataCadastro: new Date().toISOString()
       })
+      const successMessage = ref('')
+    successMessage.value = 'Cadastro realizado com sucesso! Redirecionando...'
+
+    // Pequeno delay antes do redirecionamento para mostrar a mensagem
+    setTimeout(() => {
+      showRegisterModal.value = false
+      router.push('/cadastro-pets')
+    }, 1500)
 
       // Limpa o formulário e fecha o modal
       registerForm.value = {
@@ -984,5 +996,54 @@ const closeRegisterModal = () => {
 
 .register-input:focus.error {
   box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1);
+}
+
+.success-message {
+  background: #e6ffed;
+  color: #0a5c36;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #b7eb8f;
+  text-align: center;
+}
+
+/* Animação de fade para as mensagens */
+.success-message, .error-message {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  margin-right: 8px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.register-submit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

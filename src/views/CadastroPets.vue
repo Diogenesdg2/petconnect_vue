@@ -418,6 +418,7 @@ export default {
 }
 
 .form-group {
+  color:black;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
