@@ -228,7 +228,7 @@ export default {
           peso: peso.value || null,
           datadenascimento: datadenascimento.value,
           imageUrl,
-          userID: auth.currentUser.uid,
+          userId: auth.currentUser.uid,
           createdAt: new Date().toISOString()
         }
 
