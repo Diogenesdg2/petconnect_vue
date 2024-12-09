@@ -263,6 +263,7 @@ export default {
 }
 
 .location-info {
+  color:black;
   position: absolute;
   top: 20px;
   right: 20px;
