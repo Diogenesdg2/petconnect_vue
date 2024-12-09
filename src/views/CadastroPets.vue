@@ -209,14 +209,14 @@ export default {
           throw new Error('Usuário não autenticado')
         }
 
-        let imageUrl = null
+        let imagemUrl = null
         if (selectedImage.value) {
           const imageRef = storageRef(
             storage,
             `pets/${auth.currentUser.uid}/${Date.now()}_${selectedImage.value.name}`
           )
           await uploadBytes(imageRef, selectedImage.value)
-          imageUrl = await getDownloadURL(imageRef)
+          imagemUrl = await getDownloadURL(imageRef)
         }
 
         const petData = {
@@ -227,7 +227,7 @@ export default {
           porte: porte.value,
           peso: peso.value || null,
           datadenascimento: datadenascimento.value,
-          imageUrl,
+          imagemUrl,
           userId: auth.currentUser.uid,
           createdAt: new Date().toISOString()
         }

@@ -276,6 +276,7 @@ export default {
 
 .no-location-info {
   position: absolute;
+  color:black;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

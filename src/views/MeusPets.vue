@@ -52,7 +52,7 @@
       <div v-if="!loading && pets.length > 0" class="pets-grid">
         <div v-for="pet in pets" :key="pet.id" class="pet-card">
           <img
-            :src="pet.imageUrl || '/placeholder-pet.jpg'"
+            :src="pet.imagemUrl || '/placeholder-pet.jpg'"
             :alt="pet.nome"
             class="pet-image"
           >
@@ -129,7 +129,7 @@
     <form @submit.prevent="updatePet" class="edit-form">
       <div class="form-image">
         <img
-          :src="editingPet?.previewUrl || editingPet?.imageUrl || '/placeholder-pet.jpg'"
+          :src="editingPet?.previewUrl || editingPet?.imagemUrl || '/placeholder-pet.jpg'"
           alt="Preview"
           class="preview-image"
         >
@@ -321,9 +321,9 @@ const updatePet = async () => {
     // Se houver nova imagem, fazer upload
     if (newImage.value) {
       // Deletar imagem antiga se existir
-      if (editingPet.value.imageUrl) {
+      if (editingPet.value.imagemUrl) {
         try {
-          const oldImageRef = storageRef(storage, editingPet.value.imageUrl)
+          const oldImageRef = storageRef(storage, editingPet.value.imagemUrl)
           await deleteObject(oldImageRef)
         } catch (error) {
           console.error('Erro ao deletar imagem antiga:', error)
@@ -333,8 +333,8 @@ const updatePet = async () => {
       // Upload da nova imagem
       const imageRef = storageRef(storage, `pets/${auth.currentUser.uid}/${Date.now()}_${newImage.value.name}`)
       await uploadBytes(imageRef, newImage.value)
-      const imageUrl = await getDownloadURL(imageRef)
-      updateData.imageUrl = imageUrl
+      const imagemUrl = await getDownloadURL(imageRef)
+      updateData.imagemUrl = imagemUrl
     }
 
     // Remover campos desnecessários
@@ -381,10 +381,10 @@ const deletePet = async () => {
     deleting.value = true
 
     // Deletar imagem se existir
-    if (petToDelete.value.imageUrl) {
+    if (petToDelete.value.imagemUrl) {
       const storage = getStorage()
       try {
-        const imageRef = storageRef(storage, petToDelete.value.imageUrl)
+        const imageRef = storageRef(storage, petToDelete.value.imagemUrl)
         await deleteObject(imageRef)
       } catch (error) {
         console.error('Erro ao deletar imagem:', error)
@@ -459,7 +459,7 @@ const sharePet = async (pet) => {
         ...data,
         // Verificar todos os possíveis campos de imagem
         imagemUrl: data.imagemUrl,
-        imageUrl: data.imageUrl,
+        imagemUrl: data.imagemUrl,
         imagem: data.imagem,
         foto: data.foto
       })
@@ -476,7 +476,7 @@ const sharePet = async (pet) => {
         genero: data.genero || '',
         porte: data.porte || '',
         // Tentar todos os possíveis campos de imagem
-        imageUrl: data.imagemUrl || data.imageUrl || data.imagem || data.foto || 'https://placehold.co/300x200?text=Pet'
+        imagemUrl: data.imagemUrl || data.imagemUrl || data.imagem || data.foto || 'https://placehold.co/300x200?text=Pet'
       }
     })
 
