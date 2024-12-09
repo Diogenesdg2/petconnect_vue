@@ -25,13 +25,13 @@
   >
     {{ loading ? 'Entrando...' : 'Entrar' }}
   </button>
-  <button
-    class="register-button"
-    @click="showRegisterModal = true"
-    :disabled="loading"
-  >
-    Cadastrar
-  </button>
+    <button
+      class="login-button"
+      @click="openRegisterModal"
+      :disabled="loading"
+    >
+      Cadastrar
+    </button>
 </div>
 
 <!-- Adicionar o modal de cadastro -->
@@ -39,10 +39,14 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2>Cadastro de Usuário</h2>
-      <button class="close-button" @click="showRegisterModal = false">&times;</button>
+      <button class="close-button" @click="closeRegisterModal">&times;</button>
     </div>
 
     <form @submit.prevent="handleRegister" class="register-form">
+      <div v-if="registerError" class="error-message">
+         {{ registerError }}
+      </div>
+
       <!-- Nome -->
       <div class="form-group">
         <input
@@ -198,6 +202,35 @@ export default {
     const errorMessage = ref('')
     const router = useRouter()
     const auth = getAuth()
+    const openRegisterModal = () => {
+  showRegisterModal.value = true
+}
+
+const closeRegisterModal = () => {
+  showRegisterModal.value = false
+  // Opcional: limpar o formulário ao fechar
+  registerForm.value = {
+    nome: '',
+    email: '',
+    password: '',
+    dataNascimento: '',
+    telefone: '',
+    genero: '',
+    foto: ''
+  }
+}
+  const resetForm = () => {
+    registerForm.value = {
+      nome: '',
+      email: '',
+      password: '',
+      dataNascimento: '',
+      telefone: '',
+      genero: '',
+      foto: ''
+    }
+    registerError.value = ''
+  }
 
     // Refs para cadastro...
     const showRegisterModal = ref(false)
@@ -333,70 +366,85 @@ export default {
     }
 
     // Função de registro...
-    const handleRegister = async () => {
+      const handleRegister = async () => {
+    try {
       registerError.value = ''
 
+      // Validação prévia
       if (!validateRegisterForm()) {
         return
       }
 
-      try {
-        isRegistering.value = true
-
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          registerForm.value.email,
-          registerForm.value.password
-        )
-
-        const db = getFirestore()
-        await addDoc(collection(db, 'Usuarios'), {
-          uid: userCredential.user.uid,
-          nome: registerForm.value.nome,
-          email: registerForm.value.email,
-          dataNascimento: registerForm.value.dataNascimento,
-          telefone: registerForm.value.telefone,
-          genero: registerForm.value.genero,
-          foto: registerForm.value.foto,
-          dataCadastro: new Date().toISOString()
-        })
-
-        // Limpar formulário
-        registerForm.value = {
-          nome: '',
-          email: '',
-          password: '',
-          dataNascimento: '',
-          telefone: '',
-          genero: '',
-          foto: ''
-        }
-        showRegisterModal.value = false
-
-        router.push('/cadastro-pets')
-
-      } catch (error) {
-        console.error('Erro no cadastro:', error)
-        switch (error.code) {
-          case 'auth/email-already-in-use':
-            registerError.value = 'Este email já está em uso'
-            break
-          case 'auth/invalid-email':
-            registerError.value = 'Email inválido'
-            break
-          case 'auth/operation-not-allowed':
-            registerError.value = 'Operação não permitida'
-            break
-          case 'auth/weak-password':
-            registerError.value = 'Senha muito fraca'
-            break
-          default:
-            registerError.value = 'Erro ao realizar cadastro. Tente novamente.'
-        }
-      } finally {
-        isRegistering.value = false
+      // Verifica se os campos obrigatórios estão preenchidos
+      if (!registerForm.value.email || !registerForm.value.password) {
+        registerError.value = 'Email e senha são obrigatórios'
+        return
       }
+
+      isRegistering.value = true
+
+      // Tenta criar o usuário
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        registerForm.value.email,
+        registerForm.value.password
+      )
+
+      // Se chegou aqui, usuário foi criado com sucesso
+      const db = getFirestore()
+      await addDoc(collection(db, 'Usuarios'), {
+        uid: userCredential.user.uid,
+        nome: registerForm.value.nome,
+        email: registerForm.value.email,
+        dataNascimento: registerForm.value.dataNascimento,
+        telefone: registerForm.value.telefone,
+        genero: registerForm.value.genero,
+        foto: registerForm.value.foto,
+        dataCadastro: new Date().toISOString()
+      })
+
+      // Limpa o formulário e fecha o modal
+      registerForm.value = {
+        nome: '',
+        email: '',
+        password: '',
+        dataNascimento: '',
+        telefone: '',
+        genero: '',
+        foto: ''
+      }
+      showRegisterModal.value = false
+
+      // Redireciona para a próxima página
+      router.push('/cadastro-pets')
+
+    } catch (error) {
+      console.error('Erro no cadastro:', error)
+
+      // Tratamento específico para cada tipo de erro
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          registerError.value = 'Este email já está cadastrado. Por favor, use outro email ou faça login.'
+          break
+        case 'auth/invalid-email':
+          registerError.value = 'Email inválido. Por favor, verifique o formato do email.'
+          break
+        case 'auth/operation-not-allowed':
+          registerError.value = 'Cadastro com email e senha não está habilitado.'
+          break
+        case 'auth/weak-password':
+          registerError.value = 'A senha é muito fraca. Use pelo menos 6 caracteres.'
+          break
+        case 'auth/network-request-failed':
+          registerError.value = 'Erro de conexão. Verifique sua internet e tente novamente.'
+          break
+        default:
+          registerError.value = 'Erro ao realizar cadastro. Por favor, tente novamente.'
+      }
+    } finally {
+      isRegistering.value = false
     }
+  }
 
     return {
       // Estados
@@ -412,7 +460,10 @@ export default {
       // Métodos
       handleLogin,
       handleRegister,
-      handleFileUpload
+      handleFileUpload,
+      openRegisterModal,
+      closeRegisterModal,
+      formatPhoneNumber
     }
   }
 }
@@ -494,16 +545,6 @@ export default {
   .login-button {
     width: 100%;
   }
-  .error-message {
-  background: rgba(48, 1, 1, 0.1);
-  color: #f50808;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  text-align: center;
-  margin-bottom: 1rem;
-  width: 100%;
-  backdrop-filter: blur(5px);
-}
 
 .login-input:disabled,
 .login-button:disabled {
@@ -789,25 +830,6 @@ export default {
    opacity: 1;
  }
 }
-/* Adicionar ao seu <style scoped> existente */
-
-.register-button {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  border-radius: 20px;
-  background: #00695c;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.register-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  background: #004d40;
-}
 
 .modal-overlay {
   position: fixed;
@@ -821,6 +843,7 @@ export default {
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
+  transition: opacity 0.3s ease;
 }
 
 .modal-content {
@@ -833,6 +856,7 @@ export default {
   overflow-y: auto;
   position: relative;
   animation: modalIn 0.3s ease-out;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .modal-header {
@@ -868,6 +892,7 @@ export default {
 
 .register-input {
   width: 100%;
+  color:black;
   padding: 0.8rem 1rem;
   border: 2px solid #154ABC;
   border-radius: 10px;
@@ -876,6 +901,7 @@ export default {
 }
 
 .register-input:focus {
+  color:black;
   outline: none;
   border-color: #004d40;
   box-shadow: 0 0 0 2px rgba(0, 77, 64, 0.1);
@@ -884,7 +910,8 @@ export default {
 .file-input-label {
   display: block;
   padding: 0.8rem 1rem;
-  background: #f0f0f0;
+  color:white;
+  background: #1a76d3;
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
@@ -892,7 +919,7 @@ export default {
 }
 
 .file-input-label:hover {
-  background: #e0e0e0;
+  background: #154ABC;
 }
 
 .file-input {
@@ -900,7 +927,7 @@ export default {
 }
 
 .register-submit-button {
-  background: #154ABC;
+  background: #1a76d3;
   color: white;
   padding: 1rem;
   border: none;
@@ -911,7 +938,7 @@ export default {
 }
 
 .register-submit-button:hover {
-  background: #004d40;
+  background: #154ABC;
 }
 
 @keyframes modalIn {
@@ -930,5 +957,32 @@ export default {
     width: 95%;
     padding: 1.5rem;
   }
+  .register-input.error {
+  border-color: #dc3545;
+}
+
+.error-feedback {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+}
+
+.error-message {
+  background: #fde8e8;
+  color: #e53e3e;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #f8b4b4;
+}
+
+.register-input.error {
+  border-color: #e53e3e;
+}
+
+.register-input:focus.error {
+  box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1);
 }
 </style>

@@ -4,16 +4,16 @@
     <nav class="top-nav">
       <div class="nav-content">
         <div class="logo">PetConnect</div>
-        <div class="nav-links">  
-          <router-link to="/dashboard" class="logout-btn">  
-            <span class="icon">📍</span> Localizações  
-          </router-link>  
-          <router-link to="/cadastro-pets" class="nav-link">  
-            <span class="icon">➕</span> Novo Pet  
-          </router-link>  
-          <button @click="handleLogout" class="logout-btn">  
-            <span class="icon">🚪</span> Sair  
-          </button>  
+        <div class="nav-links">
+          <router-link to="/dashboard" class="logout-btn">
+            <span class="icon">📍</span> Localizações
+          </router-link>
+          <router-link to="/cadastro-pets" class="nav-link">
+            <span class="icon">➕</span> Novo Pet
+          </router-link>
+          <button @click="handleLogout" class="logout-btn">
+            <span class="icon">🚪</span> Sair
+          </button>
         </div>
       </div>
     </nav>
