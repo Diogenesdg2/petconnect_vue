@@ -5,7 +5,7 @@
       <div class="nav-content">
         <div class="logo">PetConnect</div>
         <div class="nav-links">
-          <router-link to="/meus-pets" class="nav-link">
+          <router-link to="/meus-pets" class="logout-btn">
             <span class="icon">🏠</span> Meus Pets
           </router-link>
           <button @click="handleLogout" class="logout-btn">

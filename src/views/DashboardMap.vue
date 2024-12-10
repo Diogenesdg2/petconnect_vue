@@ -31,205 +31,237 @@
   </div>
 </template>
 
-<script>
+<<script setup>
 import { onMounted, ref } from 'vue'
-import { getFirestore, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
+import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-export default {
-  name: 'DashboardMap',
-  setup() {
-    const mapContainer = ref(null)
-    const selectedLocation = ref(null)
-    const noLocationFound = ref(false)
-    const petsLegend = ref([]) // Novo ref para a legenda
-    let map = null
+// Refs
+const mapContainer = ref(null)
+const selectedLocation = ref(null)
+const noLocationFound = ref(false)
+const petsLegend = ref([])
+let map = null
 
-    // Lista de cores para os marcadores
-    const markerColors = [
-      '#FF0000', // Vermelho
-      '#0000FF', // Azul
-      '#008000', // Verde
-      '#FFA500', // Laranja
-      '#800080', // Roxo
-      '#FF1493', // Rosa
-      '#00FFFF', // Ciano
-      '#FFD700', // Dourado
-      '#8B4513', // Marrom
-      '#4B0082'  // Índigo
-    ]
+// Cores para os marcadores
+const markerColors = [
+  '#FF0000', // Vermelho
+  '#0000FF', // Azul
+  '#008000', // Verde
+  '#FFA500', // Laranja
+  '#800080', // Roxo
+  '#FF1493', // Rosa
+  '#00FFFF', // Ciano
+  '#FFD700', // Dourado
+  '#8B4513', // Marrom
+  '#4B0082'  // Índigo
+]
 
-    // Função para criar ícone colorido
-    const createColoredIcon = (color) => {
-      return L.divIcon({
-        className: 'custom-marker',
-        html: `
-          <div style="
-            background-color: ${color};
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
-          "></div>
-        `,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-        popupAnchor: [0, -12]
-      })
-    }
+// Função para criar ícone colorido
+const createColoredIcon = (color) => {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="
+        background-color: ${color};
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 4px rgba(0,0,0,0.5);
+      "></div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12]
+  })
+}
 
-    const formatTimestamp = (timestamp) => {
-      if (!timestamp) return ''
-      const date = new Date(timestamp)
-      return date.toLocaleString('pt-BR')
-    }
-
-    const initMap = async () => {
-      const auth = getAuth()
-      const currentUser = auth.currentUser
-
-      if (!currentUser) {
-        console.error('Usuário não está logado')
-        return
-      }
-
-      map = L.map('map').setView([-22.1740094, -47.3938169], 13)
-      console.log('Mapa inicializado:', map)
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map)
-
-      try {
-        const db = getFirestore()
-        const petsRef = collection(db, 'Pets')
-        const petsQuery = query(
-          petsRef,
-          where('userId', '==', currentUser.uid)
-        )
-
-        const petsSnapshot = await getDocs(petsQuery)
-        console.log('Pets encontrados:', petsSnapshot.size)
-
-        if (petsSnapshot.empty) {
-          console.log('Nenhum pet encontrado para este usuário')
-          noLocationFound.value = true
-          return
-        }
-
-        const markers = []
-        const bounds = L.latLngBounds()
-        const legendItems = [] // Array para itens da legenda
-
-        // Para cada pet do usuário
-        for (const [index, petDoc] of petsSnapshot.docs.entries()) {
-          const petData = petDoc.data()
-          const petColor = markerColors[index % markerColors.length]
-
-          // Adicionar à legenda
-          legendItems.push({
-            nome: petData.nome,
-            color: petColor
-          })
-
-          console.log('Buscando localização do pet:', petData.nome)
-          console.log('Adicionado à legenda:', petData.nome, petColor)
-
-          const locationsRef = collection(db, 'Localizacoes')
-          const locQuery = query(
-            locationsRef,
-            where('petId', '==', petDoc.id),
-            orderBy('timestamp', 'desc'),
-            limit(1)
-          )
-
-          try {
-            const locationSnapshot = await getDocs(locQuery)
-
-            if (!locationSnapshot.empty) {
-              const locationData = locationSnapshot.docs[0].data()
-              console.log(`Localização encontrada para ${petData.nome}:`, locationData)
-
-              if (locationData.latitude && locationData.longitude) {
-                const marker = L.marker(
-                  [locationData.latitude, locationData.longitude],
-                  { icon: createColoredIcon(petColor) }
-                )
-                  .addTo(map)
-                  .bindPopup(`
-                    <div style="text-align: center;">
-                      <div style="
-                        width: 12px;
-                        height: 12px;
-                        background-color: ${petColor};
-                        border-radius: 50%;
-                        margin: 0 auto 5px auto;
-                        border: 2px solid white;
-                        box-shadow: 0 0 2px rgba(0,0,0,0.5);
-                      "></div>
-                      <b>${petData.nome}</b><br>
-                      Última atualização: ${formatTimestamp(locationData.timestamp)}
-                    </div>
-                  `)
-
-                marker.on('click', () => {
-                  selectedLocation.value = {
-                    ...locationData,
-                    nomePet: petData.nome,
-                    nomeTutor: petData.nomeTutor || currentUser.displayName,
-                    telefone: petData.telefone || 'Não informado',
-                    markerColor: petColor
-                  }
-                })
-
-                markers.push(marker)
-                bounds.extend([locationData.latitude, locationData.longitude])
-              }
-            } else {
-              console.log(`Nenhuma localização encontrada para ${petData.nome}`)
-            }
-          } catch (error) {
-            console.error(`Erro ao buscar localização do pet ${petData.nome}:`, error)
-          }
-        }
-        console.log('Itens da legenda:', legendItems) // Debug
-        petsLegend.value = [...legendItems]
-
-        if (markers.length > 0) {
-          map.fitBounds(bounds, {
-            padding: [50, 50],
-            maxZoom: 15
-          })
-
-          if (markers.length === 1) {
-            markers[0].openPopup()
-          }
-        } else {
-          console.log('Nenhuma localização encontrada para os pets')
-          noLocationFound.value = true
-        }
-
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error)
-      }
-    }
-
-    onMounted(async () => {
-      await initMap()
+// Formatar timestamp
+const formatTimestamp = (timestamp) => {
+  if (!timestamp || !timestamp.seconds) return ''
+  try {
+    const date = new Date(timestamp.seconds * 1000)
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     })
-
-    return {
-      mapContainer,
-      selectedLocation,
-      noLocationFound,
-      formatTimestamp,
-      petsLegend
-    }
+  } catch (error) {
+    console.error('Erro ao formatar data:', error)
+    return 'Data não disponível'
   }
 }
+
+// Buscar dados do usuário
+const getUserData = async (userId) => {
+  try {
+    const db = getFirestore()
+    const userRef = doc(db, 'Usuarios', userId)
+    const userSnap = await getDoc(userRef)
+
+    if (userSnap.exists()) {
+      return userSnap.data()
+    }
+    return null
+  } catch (error) {
+    console.error('Erro ao buscar dados do usuário:', error)
+    return null
+  }
+}
+
+// Inicializar mapa
+const initMap = async () => {
+  const auth = getAuth()
+  const currentUser = auth.currentUser
+
+  if (!currentUser) {
+    console.error('Usuário não está logado')
+    return
+  }
+
+  // Buscar dados do usuário
+  const userData = await getUserData(currentUser.uid)
+  console.log('Dados do usuário:', userData)
+
+  map = L.map('map').setView([-22.1740094, -47.3938169], 13)
+  console.log('Mapa inicializado:', map)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map)
+
+  try {
+    const db = getFirestore()
+    const petsRef = collection(db, 'Pets')
+    const petsQuery = query(
+      petsRef,
+      where('userId', '==', currentUser.uid)
+    )
+
+    const petsSnapshot = await getDocs(petsQuery)
+    console.log('Pets encontrados:', petsSnapshot.size)
+
+    if (petsSnapshot.empty) {
+      console.log('Nenhum pet encontrado para este usuário')
+      noLocationFound.value = true
+      return
+    }
+
+    const markers = []
+    const bounds = L.latLngBounds()
+    const legendItems = []
+
+    // Para cada pet do usuário
+    for (const [index, petDoc] of petsSnapshot.docs.entries()) {
+      const petData = petDoc.data()
+      const petColor = markerColors[index % markerColors.length]
+
+      // Adicionar à legenda
+      legendItems.push({
+        nome: petData.nome,
+        color: petColor
+      })
+
+      console.log('Buscando localização do pet:', petData.nome)
+
+      const locationsRef = collection(db, 'Localizacoes')
+      const locQuery = query(
+        locationsRef,
+        where('petId', '==', petDoc.id),
+        orderBy('timestamp', 'desc'),
+        limit(1)
+      )
+
+      try {
+        const locationSnapshot = await getDocs(locQuery)
+
+        if (!locationSnapshot.empty) {
+          const locationData = locationSnapshot.docs[0].data()
+          console.log(`Localização encontrada para ${petData.nome}:`, locationData)
+
+          if (locationData.latitude && locationData.longitude) {
+            const marker = L.marker(
+              [locationData.latitude, locationData.longitude],
+              { icon: createColoredIcon(petColor) }
+            )
+              .addTo(map)
+              .bindPopup(`
+                <div style="text-align: center;">
+                  <div style="
+                    width: 12px;
+                    height: 12px;
+                    background-color: ${petColor};
+                    border-radius: 50%;
+                    margin: 0 auto 5px auto;
+                    border: 2px solid white;
+                    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+                  "></div>
+                  <b>${petData.nome}</b><br>
+                  Última atualização: ${formatTimestamp(locationData.timestamp)}
+                </div>
+              `)
+
+            marker.on('click', () => {
+              selectedLocation.value = {
+                ...locationData,
+                nomePet: petData.nome,
+                nomeTutor: userData?.nome || 'Não informado',
+                telefone: userData?.telefone || 'Não informado',
+                markerColor: petColor,
+                timestamp: locationData.timestamp
+              }
+            })
+
+            markers.push(marker)
+            bounds.extend([locationData.latitude, locationData.longitude])
+          }
+        } else {
+          console.log(`Nenhuma localização encontrada para ${petData.nome}`)
+        }
+      } catch (error) {
+        console.error(`Erro ao buscar localização do pet ${petData.nome}:`, error)
+      }
+    }
+
+    console.log('Itens da legenda:', legendItems)
+    petsLegend.value = [...legendItems]
+
+    if (markers.length > 0) {
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 15
+      })
+
+      if (markers.length === 1) {
+        markers[0].openPopup()
+      }
+    } else {
+      console.log('Nenhuma localização encontrada para os pets')
+      noLocationFound.value = true
+    }
+
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error)
+  }
+}
+
+// Montar componente
+onMounted(async () => {
+  await initMap()
+})
+
+// Expor refs necessárias para o template
+defineExpose({
+  mapContainer,
+  selectedLocation,
+  noLocationFound,
+  petsLegend
+})
 </script>
 
 <style scoped>
@@ -400,7 +432,7 @@ export default {
 }
 </style>
 
-<!-- Estilos não-scoped apenas para classes do Leaflet -->
+
 <style>
 .leaflet-popup-content-wrapper {
   border-radius: 8px;

@@ -4,11 +4,12 @@
     <nav class="top-nav">
       <div class="nav-content">
         <div class="logo">PetConnect</div>
+        <p></p>
         <div class="nav-links">
           <router-link to="/dashboard" class="logout-btn">
             <span class="icon">📍</span> Localizações
           </router-link>
-          <router-link to="/cadastro-pets" class="nav-link">
+          <router-link to="/cadastro-pets" class="logout-btn">
             <span class="icon">➕</span> Novo Pet
           </router-link>
           <button @click="handleLogout" class="logout-btn">
@@ -71,19 +72,25 @@
               <span class="detail-label">Porte:</span> {{ pet.porte }}
             </p>
             <div class="pet-actions">
-              <button @click="generateQrCode(pet)" class="action-btn qr-btn">
-                <span class="icon">📱</span> QR Code
-              </button>
-              <button @click="openEditModal(pet)" class="action-btn edit-btn">
-                <span class="icon">✏️</span> Editar
-              </button>
-              <button @click="confirmDelete(pet)" class="action-btn delete-btn">
-                <span class="icon">🗑️</span> Excluir
-              </button>
-              <button @click="sharePet(pet)" class="action-btn share-btn">
-                <span class="icon">📤</span> Compartilhar
-              </button>
-            </div>
+  <!-- Primeiro grupo (2 botões) -->
+                <div class="button-group">
+                  <button @click="generateQrCode(pet)" class="action-btn qr-btn">
+                    <span class="icon">📱</span> QR Code
+                  </button>
+                  <button @click="openEditModal(pet)" class="action-btn edit-btn">
+                    <span class="icon">✏️</span> Editar
+                  </button>
+                  <button @click="confirmDelete(pet)" class="action-btn delete-btn">
+                    <span class="icon">🗑️</span> Excluir
+                  </button>
+                  <button @click="sharePet(pet)" class="action-btn share-btn">
+                    <span class="icon">📤</span> Compartilhar
+                  </button>
+                  <button @click="verLocalizacao(pet)" class="action-btn location-btn">
+                    <span class="icon">📍</span> Localização
+                  </button>
+                </div>
+              </div>
           </div>
         </div>
       </div>
@@ -271,6 +278,28 @@ export default {
     const deleting = ref(false)
     const updateError = ref(null)
     const newImage = ref(null)
+
+    // Função para visualizar localização individual do pet
+    const verLocalizacao = (pet) => {
+      try {
+        console.log('Acessando localização do pet:', pet.nome, 'ID:', pet.id)
+        router.push({
+          name: 'pet-location',
+          params: {
+            petId: pet.id
+          },
+          query: {
+            nome: pet.nome,
+            // Adicionar informações adicionais se necessário
+            raca: pet.raca,
+            cor: pet.cor
+          }
+        })
+      } catch (error) {
+        console.error('Erro ao acessar localização do pet:', error)
+        alert('Não foi possível acessar a localização do pet. Tente novamente.')
+      }
+    }
 
     const openEditModal = (pet) => {
   editingPet.value = { ...pet }
@@ -532,7 +561,8 @@ const sharePet = async (pet) => {
       confirmDelete,
       cancelDelete,
       deletePet,
-      sharePet
+      sharePet,
+      verLocalizacao
     }
   }
 }
@@ -540,7 +570,297 @@ const sharePet = async (pet) => {
 
 <style scoped>
 
-/* Adicione ao seu <style scoped> existente */
+/* Navegação e Logo */
+.top-nav {
+  background-color: #154ABC;
+  padding: 1rem;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 2rem; /* Aumentado padding horizontal */
+  gap: 2rem; /* Aumentado gap entre logo e botões */
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo:hover {
+  opacity: 0.9;
+}
+
+/* Texto PetConnect */
+.brand-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+  font-family: 'Poppins', sans-serif;
+  margin-right: 2rem; /* Adicionado margin à direita */
+}
+
+/* Botões de navegação */
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-left: auto;
+}
+@media (max-width: 768px) {
+  .nav-content {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .brand-text {
+    margin-right: 0; /* Remove margin em telas pequenas */
+  }
+}
+
+/* Botão Novo Pet */
+.new-pet-btn {
+  background: #4CAF50;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.new-pet-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.new-pet-btn:active {
+  transform: translateY(0);
+}
+
+/* Botão de Localização */
+.location-btn {
+  background: #2196F3;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.location-btn:hover {
+  background: #1976D2;
+  transform: translateY(-2px);
+}
+
+.location-btn:active {
+  transform: translateY(0);
+}
+
+/* Botão de Logout */
+.logout-btn {
+  background: transparent;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border: 2px solid white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.logout-btn:hover {
+  background: white;
+  color: #154ABC;
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
+/* Responsividade para navegação */
+@media (max-width: 768px) {
+  .nav-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .new-pet-btn,
+  .location-btn,
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .brand-text {
+    font-size: 1.5rem;
+  }
+}
+
+/* Estados desabilitados */
+.new-pet-btn:disabled,
+.location-btn:disabled,
+.logout-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Ícones nos botões */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+/* Grupos de botões */
+..pet-actions {
+  display: flex;
+  flex-direction: column; /* Alterado para column */
+  gap: 0.75rem; /* Ajustado espaçamento */
+  margin-top: 1.5rem;
+  width: 100%; /* Garante largura total */
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column; /* Todos os grupos em coluna */
+  gap: 0.75rem;
+  width: 100%; /* Largura total */
+}
+
+/* Botões de ação */
+.action-btn {
+  width: 100%; /* Largura total */
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  color: white;
+  justify-content: center;
+}
+
+.edit-btn {
+  background: #FFA000;
+}
+
+.edit-btn:hover {
+  background: #FF8F00;
+}
+
+.delete-btn {
+  background: #D32F2F;
+}
+
+.delete-btn:hover {
+  background: #C62828;
+}
+
+.share-btn {
+  background: #7B1FA2;
+}
+
+.share-btn:hover {
+  background: #6A1B9A;
+}
+
+.location-btn {
+  background: #2196F3;
+}
+
+.location-btn:hover {
+  background: #1976D2;
+  transform: translateY(-2px);
+}
+
+.location-btn:active {
+  transform: scale(0.98);
+}
+
+.location-btn:disabled {
+  background: #90CAF9;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.qr-btn {
+  background: #4CAF50;
+}
+
+.qr-btn:hover {
+  background: #45a049;
+}
+
+/* Modal e formulários */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  max-width: 90%;
+  width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #154ABC;
+}
 
 .modal-footer {
   display: flex;
@@ -551,7 +871,8 @@ const sharePet = async (pet) => {
   border-top: 1px solid #eee;
 }
 
-.cancel-btn {
+/* Botões do modal */
+.cancel-btn, .save-btn {
   padding: 0.5rem 1.5rem;
   border: none;
   border-radius: 20px;
@@ -563,22 +884,7 @@ const sharePet = async (pet) => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.cancel-btn:hover:not(:disabled) {
-  background: #154ABC;
-}
-
-.save-btn {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  border-radius: 20px;
-  background: #4a76d3;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
+.cancel-btn:hover:not(:disabled),
 .save-btn:hover:not(:disabled) {
   background: #154ABC;
 }
@@ -589,76 +895,47 @@ const sharePet = async (pet) => {
   cursor: not-allowed;
 }
 
-/* Adicione uma animação de loading para feedback visual */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.updating {
-  position: relative;
-  padding-left: 2rem;
-}
-
-.updating::before {
-  content: '';
-  position: absolute;
-  left: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  border-top-color: transparent;
-  animation: spin 1s linear infinite;
-}
-.action-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: none;
-  color: white;
-}
-
-.edit-btn {
-  border-radius: 20px;
-  background: #FFA000;
-}
-
-.edit-btn:hover {
-  border-radius: 20px;
-  background: #FF8F00;
-}
-
-.delete-btn {
-  border-radius: 20px;
-  background: #D32F2F;
-}
-
-.delete-btn:hover {
-  border-radius: 20px;
-  background: #C62828;
-}
-
-.share-btn {
-  border-radius: 20px;
-  background: #7B1FA2;
-}
-
-.share-btn:hover {
-  background: #6A1B9A;
-}
-
+/* Formulário */
 .edit-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: border-color 0.3s;
+  color: #000000;
+  background-color: #ffffff;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.form-group input::placeholder {
+  color: #666666;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #154ABC;
+  outline: none;
+}
+
+/* Imagem do formulário */
 .form-image {
   position: relative;
   width: 100%;
@@ -678,174 +955,30 @@ const sharePet = async (pet) => {
   bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  background: #4a76d3; /* Cor azul semitransparente */
-  color: white; /* Texto branco */
+  background: #4a76d3;
+  color: white;
   padding: 0.75rem 1.5rem;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-weight: 500; /* Texto um pouco mais bold */
-  border-radius: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.8); /* Borda branca */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  font-weight: 500;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .image-upload-btn:hover {
-  background: rgba(21, 74, 188, 1); /* Azul sólido no hover */
-  transform: translateX(-50%) scale(1.05); /* Pequeno efeito de zoom */
+  background: #154ABC;
+  transform: translateX(-50%) scale(1.05);
 }
 
-/* Estilo para o input file (mantém escondido) */
 .image-upload-btn input[type="file"] {
   display: none;
 }
 
-.form-fields {
-  display: flex;
-  flex-direction: column; /* Campos em coluna */
-  gap: 1rem; /* Espaçamento entre os campos */
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem; /* Espaçamento entre label e input */
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-.form-group input,
-.form-group select {
-  padding: 0.75rem; /* Aumentei um pouco o padding para melhor visibilidade */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  transition: border-color 0.3s;
-  color: #000000;
-  background-color: #ffffff;
-  font-size: 1rem;
-  width: 100%; /* Garante que o input ocupe toda a largura */
-}
-
-.form-group input::placeholder {
-  color: #666666;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #154ABC;
-  outline: none;
-}
-
-.form-group select option {
-  color: #000000;
-  background-color: #ffffff;
-}
-/* Responsividade */
-@media (max-width: 768px) {
-  .modal-content {
-    width: 95%;
-    padding: 1.5rem;
-  }
-
-  .form-group input,
-  .form-group select {
-    padding: 0.5rem;
-  }
-}
-
-/* Ajuste do footer do modal */
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #eee;
-}
-
-
-.warning-text {
-  color: #D32F2F;
-  margin-top: 0.5rem;
-}
-
-.hidden {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .form-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .pet-actions {
-    flex-direction: column;
-  }
-
-  .action-btn {
-    width: 100%;
-  }
-}
-
+/* Layout principal */
 .app-container {
   min-height: 100vh;
   background-color: #f5f5f5;
-}
-
-.top-nav {
-  background-color: #154ABC;
-  padding: 1rem;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.nav-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.nav-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.logout-btn {
-  background: none;
-  border: 1px solid white;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  border-radius: 20px;
-  transition: all 0.3s;
-}
-
-.logout-btn:hover {
-  background-color: white;
-  color: #154ABC;
 }
 
 .main-content {
@@ -854,35 +987,7 @@ const sharePet = async (pet) => {
   padding: 2rem;
 }
 
-.page-title {
-  color: #154ABC;
-  margin-bottom: 2rem;
-  font-size: 2rem;
-}
-
-.loading-message {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.error-message {
-  background: #fff3f3;
-  color: #d32f2f;
-  padding: 1rem;
-  border-radius: 10px;
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.no-pets-message {
-  text-align: center;
-  padding: 3rem;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
+/* Cards de pets */
 .pets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -928,73 +1033,7 @@ const sharePet = async (pet) => {
   color: #333;
 }
 
-.pet-actions {
-  margin-top: 1.5rem;
-  display: flex;
-  gap: 1rem;
-}
-
-.qr-btn {
-  background: #4CAF50;
-  border: none;
-  border-radius: 20px;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.qr-btn:hover {
-  background: #45a049;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 15px;
-  padding: 2rem;
-  max-width: 90%;
-  width: 500px; /* Largura fixa mais adequada para formulário em coluna */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.modal-header h2 {
-  margin: 0;
-  color: #154ABC;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  border-radius: 20px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-}
-
+/* QR Code */
 .qrcode-container {
   display: flex;
   justify-content: center;
@@ -1013,36 +1052,83 @@ const sharePet = async (pet) => {
   word-break: break-all;
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
+/* Mensagens */
+.loading-message {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
 }
 
-.modal-btn {
-  background: #154ABC;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 0.75rem 1.5rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s;
+.error-message {
+  background: #fff3f3;
+  color: #d32f2f;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
-.modal-btn:hover {
-  background: #1239a1;
+.no-pets-message {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Animações */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.updating {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.updating::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
-  .nav-content {
+  .pet-actions {
     flex-direction: column;
-    gap: 1rem;
+    width: 100%;
   }
 
-  .nav-links {
+  .button-group,
+  .button-group-middle,
+  .button-group-right {
     width: 100%;
-    justify-content: center;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+
+  .form-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 0.5rem;
   }
 
   .main-content {
@@ -1052,13 +1138,9 @@ const sharePet = async (pet) => {
   .pets-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions button {
-    width: 100%;
-  }
+.hidden {
+  display: none;
 }
 </style>
