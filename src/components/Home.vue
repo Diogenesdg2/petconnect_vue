@@ -189,296 +189,275 @@
    </section>  <!-- Final dos cards-->
 
 </template>
-<script>
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
-import { getFirestore, collection, addDoc } from 'firebase/firestore'
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+<script>  
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'  
+import { getFirestore, collection, addDoc } from 'firebase/firestore'  
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'  
+import { ref, watch } from 'vue'  
+import { useRouter } from 'vue-router'  
 
-export default {
-  name: "PetConnect",
-  setup() {
-    // Refs existentes...
-    const email = ref('')
-    const password = ref('')
-    const loading = ref(false)
-    const errorMessage = ref('')
-    const router = useRouter()
-    const auth = getAuth()
-    const openRegisterModal = () => {
-  showRegisterModal.value = true
-}
+export default {  
+  name: "PetConnect",  
+  setup() {  
+    const router = useRouter()  
+    const auth = getAuth()  
 
-const closeRegisterModal = () => {
-  showRegisterModal.value = false
-  // Opcional: limpar o formulário ao fechar
-  registerForm.value = {
-    nome: '',
-    email: '',
-    password: '',
-    dataNascimento: '',
-    telefone: '',
-    genero: '',
-    foto: ''
-  }
-}
-  const resetForm = () => {
-    registerForm.value = {
-      nome: '',
-      email: '',
-      password: '',
-      dataNascimento: '',
-      telefone: '',
-      genero: '',
-      foto: ''
-    }
-    registerError.value = ''
-  }
+    // Estados do login  
+    const email = ref('')  
+    const password = ref('')  
+    const loading = ref(false)  
+    const errorMessage = ref('')  
 
-    // Refs para cadastro...
-    const showRegisterModal = ref(false)
-    const isRegistering = ref(false)
-    const registerError = ref('')
-    const registerForm = ref({
-      nome: '',
-      email: '',
-      password: '',
-      dataNascimento: '',
-      telefone: '',
-      genero: '',
-      foto: ''
-    })
+    // Estados do registro  
+    const showRegisterModal = ref(false)  
+    const isRegistering = ref(false)  
+    const registerError = ref('')  
+    const successMessage = ref('')  
+    const registerForm = ref({  
+      nome: '',  
+      email: '',  
+      password: '',  
+      dataNascimento: '',  
+      telefone: '',  
+      genero: '',  
+      foto: ''  
+    })  
 
-    // Função para formatar telefone
-    const formatPhoneNumber = (value) => {
-      if (!value) return ''
+    // Funções do modal de registro  
+    const openRegisterModal = () => {  
+      showRegisterModal.value = true  
+      resetForm()  
+    }  
 
-      value = value.replace(/\D/g, '')
-      if (value.length > 11) value = value.slice(0, 11)
+    const closeRegisterModal = () => {  
+      showRegisterModal.value = false  
+      resetForm()  
+    }  
 
-      if (value.length > 7) {
-        return value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '(\$1) \$2-\$3')
-      } else if (value.length > 2) {
-        return value.replace(/^(\d{2})(\d{0,5})/, '(\$1) \$2')
-      }
-      return value
-    }
+    const resetForm = () => {  
+      registerForm.value = {  
+        nome: '',  
+        email: '',  
+        password: '',  
+        dataNascimento: '',  
+        telefone: '',  
+        genero: '',  
+        foto: ''  
+      }  
+      registerError.value = ''  
+      successMessage.value = ''  
+    }  
 
-    // Watch para formatar telefone automaticamente
-    watch(() => registerForm.value.telefone, (newValue) => {
-      if (newValue) {
-        registerForm.value.telefone = formatPhoneNumber(newValue)
-      }
-    })
+    // Formatação de telefone  
+    const formatPhoneNumber = (value) => {  
+      if (!value) return ''  
+      
+      value = value.replace(/\D/g, '')  
+      if (value.length > 11) value = value.slice(0, 11)  
 
-    // Função de login...
-    const handleLogin = async () => {
-      errorMessage.value = ''
+      if (value.length > 7) {  
+        return value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '(\$1) \$2-\$3')  
+      } else if (value.length > 2) {  
+        return value.replace(/^(\d{2})(\d{0,5})/, '(\$1) \$2')  
+      }  
+      return value  
+    }  
 
-      if (!email.value || !password.value) {
-        errorMessage.value = 'Por favor, preencha todos os campos'
-        return
-      }
+    // Observer para formatação automática do telefone  
+    watch(() => registerForm.value.telefone, (newValue) => {  
+      if (newValue) {  
+        registerForm.value.telefone = formatPhoneNumber(newValue)  
+      }  
+    })  
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(email.value)) {
-        errorMessage.value = 'Por favor, insira um email válido'
-        return
-      }
+    // Upload de arquivo  
+    const handleFileUpload = async (event) => {  
+      const file = event.target.files[0]  
+      if (file) {  
+        try {  
+          const storage = getStorage()  
+          const fileRef = storageRef(storage, `usuarios/${Date.now()}-${file.name}`)  
+          await uploadBytes(fileRef, file)  
+          const downloadURL = await getDownloadURL(fileRef)  
+          registerForm.value.foto = downloadURL  
+        } catch (error) {  
+          console.error('Erro ao fazer upload da imagem:', error)  
+          registerError.value = 'Erro ao fazer upload da imagem. Tente novamente.'  
+        }  
+      }  
+    }  
 
-      try {
-        loading.value = true
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email.value,
-          password.value
-        )
+    // Validação do formulário de registro  
+    const validateRegisterForm = () => {  
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/  
 
-        console.log('Usuário logado:', userCredential.user)
-        router.push('/meus-pets')
+      if (!registerForm.value.nome) {  
+        registerError.value = 'Nome é obrigatório'  
+        return false  
+      }  
+      if (!registerForm.value.email || !emailRegex.test(registerForm.value.email)) {  
+        registerError.value = 'Email inválido'  
+        return false  
+      }  
+      if (!registerForm.value.password || registerForm.value.password.length < 6) {  
+        registerError.value = 'Senha deve ter no mínimo 6 caracteres'  
+        return false  
+      }  
+      if (!registerForm.value.dataNascimento) {  
+        registerError.value = 'Data de nascimento é obrigatória'  
+        return false  
+      }  
+      if (!registerForm.value.telefone) {  
+        registerError.value = 'Telefone é obrigatório'  
+        return false  
+      }  
+      if (!registerForm.value.genero) {  
+        registerError.value = 'Gênero é obrigatório'  
+        return false  
+      }  
+      return true  
+    }  
 
-      } catch (error) {
-        switch (error.code) {
-          case 'auth/user-not-found':
-            errorMessage.value = 'Usuário não encontrado'
-            break
-          case 'auth/wrong-password':
-            errorMessage.value = 'Senha incorreta'
-            break
-          case 'auth/invalid-email':
-            errorMessage.value = 'Email inválido'
-            break
-          case 'auth/too-many-requests':
-            errorMessage.value = 'Muitas tentativas. Tente novamente mais tarde'
-            break
-          default:
-            errorMessage.value = 'Erro ao fazer login. Tente novamente'
-            console.error('Erro de login:', error)
-        }
-      } finally {
-        loading.value = false
-      }
-    }
+    // Login  
+    const handleLogin = async () => {  
+      errorMessage.value = ''  
 
-    // Upload de arquivo...
-    const handleFileUpload = async (event) => {
-      const file = event.target.files[0]
-      if (file) {
-        try {
-          const storage = getStorage()
-          const fileRef = storageRef(storage, `usuarios/${Date.now()}-${file.name}`)
-          await uploadBytes(fileRef, file)
-          const downloadURL = await getDownloadURL(fileRef)
-          registerForm.value.foto = downloadURL
-        } catch (error) {
-          console.error('Erro ao fazer upload da imagem:', error)
-          registerError.value = 'Erro ao fazer upload da imagem. Tente novamente.'
-        }
-      }
-    }
+      if (!email.value || !password.value) {  
+        errorMessage.value = 'Por favor, preencha todos os campos'  
+        return  
+      }  
 
-    // Validação do formulário...
-    const validateRegisterForm = () => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/  
+      if (!emailRegex.test(email.value)) {  
+        errorMessage.value = 'Por favor, insira um email válido'  
+        return  
+      }  
 
-      if (!registerForm.value.nome) {
-        registerError.value = 'Nome é obrigatório'
-        return false
-      }
-      if (!registerForm.value.email || !emailRegex.test(registerForm.value.email)) {
-        registerError.value = 'Email inválido'
-        return false
-      }
-      if (!registerForm.value.password || registerForm.value.password.length < 6) {
-        registerError.value = 'Senha deve ter no mínimo 6 caracteres'
-        return false
-      }
-      if (!registerForm.value.dataNascimento) {
-        registerError.value = 'Data de nascimento é obrigatória'
-        return false
-      }
-      if (!registerForm.value.telefone) {
-        registerError.value = 'Telefone é obrigatório'
-        return false
-      }
-      if (!registerForm.value.genero) {
-        registerError.value = 'Gênero é obrigatório'
-        return false
-      }
-      return true
-    }
+      try {  
+        loading.value = true  
+        const userCredential = await signInWithEmailAndPassword(  
+          auth,  
+          email.value,  
+          password.value  
+        )  
 
-    // Função de registro...
-      const handleRegister = async () => {
-    try {
-      registerError.value = ''
+        console.log('Usuário logado:', userCredential.user)  
+        router.push('/meus-pets')  
 
-      // Validação prévia
-      if (!validateRegisterForm()) {
-        return
-      }
+      } catch (error) {  
+        switch (error.code) {  
+          case 'auth/user-not-found':  
+            errorMessage.value = 'Usuário não encontrado'  
+            break  
+          case 'auth/wrong-password':  
+            errorMessage.value = 'Senha incorreta'  
+            break  
+          case 'auth/invalid-email':  
+            errorMessage.value = 'Email inválido'  
+            break  
+          case 'auth/too-many-requests':  
+            errorMessage.value = 'Muitas tentativas. Tente novamente mais tarde'  
+            break  
+          default:  
+            errorMessage.value = 'Erro ao fazer login. Tente novamente'  
+            console.error('Erro de login:', error)  
+        }  
+      } finally {  
+        loading.value = false  
+      }  
+    }  
 
-      // Verifica se os campos obrigatórios estão preenchidos
-      if (!registerForm.value.email || !registerForm.value.password) {
-        registerError.value = 'Email e senha são obrigatórios'
-        return
-      }
+    // Registro  
+    const handleRegister = async () => {  
+      try {  
+        registerError.value = ''  
+        successMessage.value = ''  
 
-      isRegistering.value = true
+        if (!validateRegisterForm()) {  
+          return  
+        }  
 
-      // Tenta criar o usuário
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        registerForm.value.email,
-        registerForm.value.password
-      )
+        isRegistering.value = true  
 
-      // Se chegou aqui, usuário foi criado com sucesso
-      const db = getFirestore()
-      await addDoc(collection(db, 'Usuarios'), {
-        uid: userCredential.user.uid,
-        nome: registerForm.value.nome,
-        email: registerForm.value.email,
-        dataNascimento: registerForm.value.dataNascimento,
-        telefone: registerForm.value.telefone,
-        genero: registerForm.value.genero,
-        foto: registerForm.value.foto,
-        dataCadastro: new Date().toISOString()
-      })
-      const successMessage = ref('')
-    successMessage.value = 'Cadastro realizado com sucesso! Redirecionando...'
+        // Criar usuário no Firebase Auth  
+        const userCredential = await createUserWithEmailAndPassword(  
+          auth,  
+          registerForm.value.email,  
+          registerForm.value.password  
+        )  
 
-    // Pequeno delay antes do redirecionamento para mostrar a mensagem
-    setTimeout(() => {
-      showRegisterModal.value = false
-      router.push('/cadastro-pets')
-    }, 1500)
+        // Salvar dados adicionais no Firestore  
+        const db = getFirestore()  
+        await addDoc(collection(db, 'Usuarios'), {  
+          uid: userCredential.user.uid,  
+          usuarioID: userCredential.user.uid,
+          nome: registerForm.value.nome,  
+          email: registerForm.value.email,  
+          dataNascimento: registerForm.value.dataNascimento,  
+          telefone: registerForm.value.telefone,  
+          genero: registerForm.value.genero,  
+          foto: registerForm.value.foto,  
+          dataCadastro: new Date().toISOString()  
+        })  
 
-      // Limpa o formulário e fecha o modal
-      registerForm.value = {
-        nome: '',
-        email: '',
-        password: '',
-        dataNascimento: '',
-        telefone: '',
-        genero: '',
-        foto: ''
-      }
-      showRegisterModal.value = false
+        // Mostrar mensagem de sucesso e redirecionar  
+        successMessage.value = 'Cadastro realizado com sucesso! Redirecionando...'  
+        
+        setTimeout(() => {  
+          resetForm()  
+          showRegisterModal.value = false  
+          router.push('/cadastro-pets')  
+        }, 1500)  
 
-      // Redireciona para a próxima página
-      router.push('/cadastro-pets')
+      } catch (error) {  
+        console.error('Erro no cadastro:', error)  
 
-    } catch (error) {
-      console.error('Erro no cadastro:', error)
+        switch (error.code) {  
+          case 'auth/email-already-in-use':  
+            registerError.value = 'Este email já está cadastrado. Por favor, use outro email ou faça login.'  
+            break  
+          case 'auth/invalid-email':  
+            registerError.value = 'Email inválido. Por favor, verifique o formato do email.'  
+            break  
+          case 'auth/operation-not-allowed':  
+            registerError.value = 'Cadastro com email e senha não está habilitado.'  
+            break  
+          case 'auth/weak-password':  
+            registerError.value = 'A senha é muito fraca. Use pelo menos 6 caracteres.'  
+            break  
+          case 'auth/network-request-failed':  
+            registerError.value = 'Erro de conexão. Verifique sua internet e tente novamente.'  
+            break  
+          default:  
+            registerError.value = 'Erro ao realizar cadastro. Por favor, tente novamente.'  
+        }  
+      } finally {  
+        isRegistering.value = false  
+      }  
+    }  
 
-      // Tratamento específico para cada tipo de erro
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          registerError.value = 'Este email já está cadastrado. Por favor, use outro email ou faça login.'
-          break
-        case 'auth/invalid-email':
-          registerError.value = 'Email inválido. Por favor, verifique o formato do email.'
-          break
-        case 'auth/operation-not-allowed':
-          registerError.value = 'Cadastro com email e senha não está habilitado.'
-          break
-        case 'auth/weak-password':
-          registerError.value = 'A senha é muito fraca. Use pelo menos 6 caracteres.'
-          break
-        case 'auth/network-request-failed':
-          registerError.value = 'Erro de conexão. Verifique sua internet e tente novamente.'
-          break
-        default:
-          registerError.value = 'Erro ao realizar cadastro. Por favor, tente novamente.'
-      }
-    } finally {
-      isRegistering.value = false
-    }
-  }
+    return {  
+      // Estados  
+      email,  
+      password,  
+      loading,  
+      errorMessage,  
+      showRegisterModal,  
+      registerForm,  
+      registerError,  
+      isRegistering,  
+      successMessage,  
 
-    return {
-      // Estados
-      email,
-      password,
-      loading,
-      errorMessage,
-      showRegisterModal,
-      registerForm,
-      registerError,
-      isRegistering,
-
-      // Métodos
-      handleLogin,
-      handleRegister,
-      handleFileUpload,
-      openRegisterModal,
-      closeRegisterModal,
-      formatPhoneNumber
-    }
-  }
-}
+      // Métodos  
+      handleLogin,  
+      handleRegister,  
+      handleFileUpload,  
+      openRegisterModal,  
+      closeRegisterModal,  
+      formatPhoneNumber  
+    }  
+  }  
+}  
 </script>
 <style scoped>
 
