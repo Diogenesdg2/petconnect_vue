@@ -488,7 +488,6 @@ const sharePet = async (pet) => {
         ...data,
         // Verificar todos os possíveis campos de imagem
         imagemUrl: data.imagemUrl,
-        imagemUrl: data.imagemUrl,
         imagem: data.imagem,
         foto: data.foto
       })
