@@ -119,10 +119,10 @@
           </div>
 
           <div class="form-group">
-            <label for="datadenascimento">Data de Nascimento</label>
+            <label for="dataNascimento">Data de Nascimento</label>
             <input
-              id="datadenascimento"
-              v-model="datadenascimento"
+              id="dataNascimento"
+              v-model="dataNascimento"
               type="date"
             >
           </div>
@@ -173,7 +173,7 @@ export default {
     const genero = ref('')
     const porte = ref('')
     const peso = ref('')
-    const datadenascimento = ref('')
+    const dataNascimento = ref('')
 
     // Refs para upload de imagem
     const fileInput = ref(null)
@@ -226,7 +226,7 @@ export default {
           genero: genero.value,
           porte: porte.value,
           peso: peso.value || null,
-          datadenascimento: datadenascimento.value,
+          dataNascimento: dataNascimento.value,
           imagemUrl,
           userId: auth.currentUser.uid,
           createdAt: new Date().toISOString()
@@ -259,7 +259,7 @@ export default {
       genero,
       porte,
       peso,
-      datadenascimento,
+      dataNascimento,
 
       // Upload de imagem
       fileInput,
