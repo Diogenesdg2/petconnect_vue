@@ -98,12 +98,13 @@
 
           <div class="form-group">
             <label for="porte">Porte*</label>
-            <select id="porte" v-model="porte" required>
-              <option value="">Selecione o porte</option>
-              <option value="Pequeno">Pequeno</option>
-              <option value="Médio">Médio</option>
-              <option value="Grande">Grande</option>
-            </select>
+            <input
+              id="porte"
+              v-model="porte"
+              type="text"
+              required
+              placeholder="Digite o porte do pet"
+            >
           </div>
 
           <div class="form-group">
