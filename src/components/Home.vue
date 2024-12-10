@@ -25,7 +25,7 @@
   >
     {{ loading ? 'Entrando...' : 'Entrar' }}
   </button>
-  <!--  <button
+   <!--- <button
       class="login-button"
       @click="openRegisterModal"
       :disabled="loading"
@@ -194,15 +194,34 @@
 
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from 'firebase/auth'
+import { getFirestore, doc, setDoc } from 'firebase/firestore' // Alterado aqui
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useRouter } from 'vue-router'
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-import { getFirestore, collection, addDoc } from 'firebase/firestore'
 
-// Router
 const router = useRouter()
+const auth = getAuth()
+const db = getFirestore()
+const storage = getStorage()
 
-// Refs para o formulário
+// Refs para login
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const errorMessage = ref('')
+
+// Refs para registro
+const showRegisterModal = ref(false)
+const isRegistering = ref(false)
+const registerError = ref('')
+const successMessage = ref('')
+
+// Formulário de registro
 const registerForm = ref({
   nome: '',
   email: '',
@@ -213,62 +232,13 @@ const registerForm = ref({
   foto: ''
 })
 
-// Refs para controle de estado
-const showRegisterModal = ref(false)
-const isRegistering = ref(false)
-const registerError = ref('')
-const successMessage = ref('')
-
-// Função para gerar UID consistente de 20 caracteres
-const generateConsistentUid = () => {
-  const timestamp = Date.now().toString(16)
-  const randomStr = Math.random().toString(36).substring(2, 15)
-  const combined = timestamp + randomStr
-  return combined.padEnd(20, '0').substring(0, 20)
+// Manipulação do modal
+const openRegisterModal = () => {
+  showRegisterModal.value = true
 }
 
-// Função para validar o formulário
-const validateRegisterForm = () => {
-  if (!registerForm.value.nome) {
-    registerError.value = 'Nome é obrigatório'
-    return false
-  }
-
-  if (!registerForm.value.email) {
-    registerError.value = 'Email é obrigatório'
-    return false
-  }
-
-  if (!registerForm.value.password) {
-    registerError.value = 'Senha é obrigatória'
-    return false
-  }
-
-  if (registerForm.value.password.length < 6) {
-    registerError.value = 'A senha deve ter pelo menos 6 caracteres'
-    return false
-  }
-
-  if (!registerForm.value.dataNascimento) {
-    registerError.value = 'Data de nascimento é obrigatória'
-    return false
-  }
-
-  if (!registerForm.value.telefone) {
-    registerError.value = 'Telefone é obrigatório'
-    return false
-  }
-
-  return true
-}
-
-// Função para formatar a data
-const formatDate = (date) => {
-  return new Date(date).toISOString()
-}
-
-// Função para limpar o formulário
-const clearForm = () => {
+const closeRegisterModal = () => {
+  showRegisterModal.value = false
   registerForm.value = {
     nome: '',
     email: '',
@@ -282,119 +252,140 @@ const clearForm = () => {
   successMessage.value = ''
 }
 
-// Função principal de registro
-const handleRegister = async () => {
-  try {
-    registerError.value = ''
-    successMessage.value = ''
-
-    if (!validateRegisterForm()) {
+// Upload de arquivo
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    if (file.size > 5000000) { // 5MB limit
+      registerError.value = 'A imagem deve ter no máximo 5MB'
       return
     }
+    registerForm.value.foto = file
+  }
+}
 
+// Login
+const handleLogin = async () => {
+  try {
+    loading.value = true
+    errorMessage.value = ''
+
+    console.log('Tentando fazer login com:', email.value)
+
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
+    console.log('Login bem-sucedido:', userCredential.user.uid)
+
+    router.push('/meus-pets')
+  } catch (error) {
+    console.error('Erro completo do login:', error)
+    switch (error.code) {
+      case 'auth/user-not-found':
+        errorMessage.value = 'Usuário não encontrado'
+        break
+      case 'auth/wrong-password':
+        errorMessage.value = 'Senha incorreta'
+        break
+      case 'auth/invalid-email':
+        errorMessage.value = 'Email inválido'
+        break
+      default:
+        errorMessage.value = 'Erro ao fazer login. Tente novamente.'
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// Registro
+const handleRegister = async (event) => {
+  try {
+    event.preventDefault()
+    registerError.value = ''
     isRegistering.value = true
 
+    console.log('Iniciando registro com:', registerForm.value)
+
+    // Validações básicas
+    if (!registerForm.value.email || !registerForm.value.password) {
+      throw new Error('Email e senha são obrigatórios')
+    }
+
     // Criar usuário no Firebase Auth
-    const auth = getAuth()
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       registerForm.value.email,
       registerForm.value.password
     )
 
-    // Gerar UID consistente
-    const consistentUid = generateConsistentUid()
+    const uid = userCredential.user.uid
+    console.log('Usuário criado no Auth:', uid)
 
-    // Salvar dados no Firestore
-    const db = getFirestore()
-    await addDoc(collection(db, 'Usuarios'), {
-      uid: consistentUid,
+    // Upload da foto se existir
+    let photoURL = null
+    if (registerForm.value.foto) {
+      try {
+        const imageRef = storageRef(
+          storage,
+          `usuarios/${uid}/${Date.now()}_${registerForm.value.foto.name}`
+        )
+        const uploadResult = await uploadBytes(imageRef, registerForm.value.foto)
+        photoURL = await getDownloadURL(uploadResult.ref)
+        console.log('Foto enviada:', photoURL)
+      } catch (uploadError) {
+        console.error('Erro no upload da foto:', uploadError)
+      }
+    }
+
+    // Preparar dados para o Firestore
+    const userData = {
+      uid: uid,
       nome: registerForm.value.nome,
       email: registerForm.value.email,
-      dataNascimento: formatDate(registerForm.value.dataNascimento),
+      dataNascimento: registerForm.value.dataNascimento,
       telefone: registerForm.value.telefone,
-      genero: registerForm.value.genero || '',
-      foto: registerForm.value.foto || '',
+      genero: registerForm.value.genero,
+      photoURL,
       dataCadastro: new Date().toISOString()
-    })
+    }
 
-    // Mostrar mensagem de sucesso
-    successMessage.value = 'Cadastro realizado com sucesso! Redirecionando...'
+    console.log('Salvando dados no Firestore:', userData)
 
-    // Limpar formulário
-    clearForm()
+    // Salvar dados no Firestore usando setDoc para definir o ID do documento
+    await setDoc(doc(db, 'Usuarios', uid), userData)
+    console.log('Documento criado com ID:', uid)
 
-    // Redirecionar após delay
+    successMessage.value = 'Cadastro realizado com sucesso!'
+
     setTimeout(() => {
-      showRegisterModal.value = false
+      closeRegisterModal()
       router.push('/cadastro-pets')
-    }, 1500)
+    }, 2000)
 
   } catch (error) {
-    console.error('Erro no cadastro:', error)
+    console.error('Erro completo do cadastro:', error)
+    isRegistering.value = false
 
-    switch (error.code) {
-      case 'auth/email-already-in-use':
-        registerError.value = 'Este email já está cadastrado. Por favor, use outro email ou faça login.'
-        break
-      case 'auth/invalid-email':
-        registerError.value = 'Email inválido. Por favor, verifique o formato do email.'
-        break
-      case 'auth/operation-not-allowed':
-        registerError.value = 'Cadastro com email e senha não está habilitado.'
-        break
-      case 'auth/weak-password':
-        registerError.value = 'A senha é muito fraca. Use pelo menos 6 caracteres.'
-        break
-      case 'auth/network-request-failed':
-        registerError.value = 'Erro de conexão. Verifique sua internet e tente novamente.'
-        break
-      default:
-        registerError.value = 'Erro ao realizar cadastro. Por favor, tente novamente.'
+    if (error.code) {
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          registerError.value = 'Este email já está cadastrado'
+          break
+        case 'auth/invalid-email':
+          registerError.value = 'Email inválido'
+          break
+        case 'auth/weak-password':
+          registerError.value = 'A senha deve ter pelo menos 6 caracteres'
+          break
+        default:
+          registerError.value = 'Erro ao realizar cadastro: ' + error.message
+      }
+    } else {
+      registerError.value = error.message || 'Erro ao realizar cadastro'
     }
   } finally {
     isRegistering.value = false
   }
 }
-
-// Função para abrir o modal
-const openRegisterModal = () => {
-  showRegisterModal.value = true
-  clearForm()
-}
-
-// Função para fechar o modal
-const closeRegisterModal = () => {
-  showRegisterModal.value = false
-  clearForm()
-}
-
-// Funções para manipulação de foto (se necessário)
-const handleFileUpload = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    // Adicione aqui a lógica para upload de arquivo
-    // Por exemplo, converter para base64 ou enviar para storage
-  }
-}
-
-// Lifecycle hooks
-onMounted(() => {
-  // Adicione aqui qualquer inicialização necessária
-})
-
-// Expor funções e refs para o template
-defineExpose({
-  showRegisterModal,
-  registerForm,
-  registerError,
-  successMessage,
-  isRegistering,
-  handleRegister,
-  openRegisterModal,
-  closeRegisterModal,
-  handleFileUpload
-})
 </script>
 <style scoped>
 
